@@ -52,10 +52,13 @@ public class BookingService {
     private final SeatNoService seatNoService;
     private final ModelMapper mapper;
 
-    public BookingService(TrainInfoService trainInfoService, RouteInfoService routeInfoService,
+    public BookingService(TrainInfoService trainInfoService,
+                          RouteInfoService routeInfoService,
                           SeatInfoTrackerService seatInfoTrackerService,
                           BookingInfoTrackerService bookingInfoTrackerService,
-                          BookingOpenInfoService bookingOpenInfoService, TrainArrivalDateService trainArrivalDateService, SeatNoService seatNoService,
+                          BookingOpenInfoService bookingOpenInfoService,
+                          TrainArrivalDateService trainArrivalDateService,
+                          SeatNoService seatNoService,
                           ModelMapper mapper) {
 
         this.trainInfoService = trainInfoService;
@@ -89,12 +92,12 @@ public class BookingService {
                                           );
 
         //Check if DOJ is Valid
-        String startFrom = request.getFrom();
+        String pssngrJournyStartStn = request.getFrom();
 
         LocalDate trainStartDateFrmSource = Utils.toLocalDate(request.getStartDt());
 
         LocalDate dateOfArrival =  trainArrivalDateService.getArrivalDate(request.getTrainNo(),
-                    startFrom,trainStartDateFrmSource);
+                pssngrJournyStartStn,trainStartDateFrmSource);
 
         LocalDate dateOfJourney = Utils.toLocalDate(request.getDoj());
 
