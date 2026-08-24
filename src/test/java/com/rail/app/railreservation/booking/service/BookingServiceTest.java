@@ -2,10 +2,12 @@ package com.rail.app.railreservation.booking.service;
 
 import com.rail.app.railreservation.booking.dto.*;
 import com.rail.app.railreservation.booking.entity.Booking;
+import com.rail.app.railreservation.booking.entity.BookingOpen;
 import com.rail.app.railreservation.booking.enums.BookingStatus;
 import com.rail.app.railreservation.booking.exception.BookingCannotOpenException;
 import com.rail.app.railreservation.booking.exception.BookingNotOpenException;
 import com.rail.app.railreservation.booking.exception.InvalidBookingException;
+import com.rail.app.railreservation.booking.repository.BookingOpenRepository;
 import com.rail.app.railreservation.enquiry.exception.PnrNoIncorrectException;
 import com.rail.app.railreservation.route.entity.Route;
 import com.rail.app.railreservation.route.service.RouteInfoService;
@@ -48,15 +50,15 @@ class BookingServiceTest {
 
     @Mock private RouteInfoService routeInfoService;
 
-    @Mock private SeatInfoTrackerService seatInfoTrackerService;
-
     @Mock private BookingInfoTrackerService bookingInfoTrackerService;
 
-    @Mock private BookingOpenInfoService bookingOpenInfoService;
+    @Mock private BookingService bookingService;
+
+    @Mock private BookingOpenRepository bookingOpenRepo;
 
     @Mock private TrainArrivalDateService trainArrivalDateService;
 
-    @Mock private SeatNoService seatNoService;
+    @Mock private SeatService seatService;
     private ModelMapper mapper;
 
     private LocalDate startDate;
@@ -79,8 +81,8 @@ class BookingServiceTest {
         mapper = new ModelMapper();
 
         bookingServiceUnderTest = new BookingServiceForTest(trainService,routeInfoService,
-                seatInfoTrackerService,bookingInfoTrackerService,bookingOpenInfoService,trainArrivalDateService,
-                seatNoService,mapper);
+                bookingInfoTrackerService,bookingService,bookingOpenRepo,trainArrivalDateService,
+                seatService,mapper);
 
 
 
@@ -162,7 +164,7 @@ class BookingServiceTest {
         when(routeInfoService.checkIfRouteContains(bookingRequest.getFrom(),
                 bookingRequest.getTo(),route)).thenReturn(true);
 
-        when(bookingOpenInfoService.isBookingOpen(bookingRequest)).thenReturn(Optional.empty());
+        when(bookingService.isBookingOpen(bookingRequest)).thenReturn(Optional.empty());
 
         //then
         assertThrows(BookingNotOpenException.class,()-> bookingServiceUnderTest.book(bookingRequest));
@@ -181,7 +183,7 @@ class BookingServiceTest {
         when(routeInfoService.checkIfRouteContains(bookingRequest.getFrom(),
                 bookingRequest.getTo(),route)).thenReturn(true);
 
-        when(bookingOpenInfoService.isBookingOpen(bookingRequest)).thenReturn(Optional.of(true));
+        when(bookingService.isBookingOpen(bookingRequest)).thenReturn(Optional.of(true));
 
         when(trainArrivalDateService.getArrivalDate(bookingRequest.getTrainNo(),bookingRequest.getFrom(),
                 Utils.toLocalDate(bookingRequest.getStartDt())))
@@ -204,7 +206,7 @@ class BookingServiceTest {
         when(routeInfoService.checkIfRouteContains(bookingRequest.getFrom(),
                 bookingRequest.getTo(),route)).thenReturn(true);
 
-        when(bookingOpenInfoService.isBookingOpen(bookingRequest)).thenReturn(Optional.of(true));
+        when(bookingService.isBookingOpen(bookingRequest)).thenReturn(Optional.of(true));
 
         when(trainArrivalDateService.getArrivalDate(bookingRequest.getTrainNo(),bookingRequest.getFrom(),
                 Utils.toLocalDate(bookingRequest.getStartDt())))
@@ -212,17 +214,17 @@ class BookingServiceTest {
 
 
 
-        when(seatNoService.getAvailableSeatNumbers(bookingRequest)).thenReturn(Set.of(2,3,4));
+        when(seatService.getAvailableSeatNumbers(bookingRequest)).thenReturn(Set.of(2,3,4));
 
-        when(seatInfoTrackerService.getCountOfConfirmedSeats(bookingRequest)).thenReturn(1);
+        when(seatService.getCountOfConfirmedSeats(bookingRequest)).thenReturn(1);
 
         when(bookingInfoTrackerService.trackBooking(any(Passenger.class),any(BookingRequest.class),
                 any(BookingStatus.class),anyInt())).thenReturn(2);
 
-        doNothing().when(seatInfoTrackerService)
+        doNothing().when(seatService)
                 .trackLastSeatNo(any(BookingRequest.class),anyInt());
 
-        doNothing().when(seatInfoTrackerService)
+        doNothing().when(seatService)
                 .trackCountOfSeats(bookingRequest,4);
 
         BookingResponse bookingResponse = bookingServiceUnderTest.book(bookingRequest);
@@ -250,7 +252,7 @@ class BookingServiceTest {
         when(routeInfoService.checkIfRouteContains(bookingRequest.getFrom(),
                 bookingRequest.getTo(),route)).thenReturn(true);
 
-        when(bookingOpenInfoService.isBookingOpen(bookingRequest)).thenReturn(Optional.of(true));
+        when(bookingService.isBookingOpen(bookingRequest)).thenReturn(Optional.of(true));
 
         when(trainArrivalDateService.getArrivalDate(bookingRequest.getTrainNo(),bookingRequest.getFrom(),
                 Utils.toLocalDate(bookingRequest.getStartDt())))
@@ -258,17 +260,17 @@ class BookingServiceTest {
 
 
 
-        when(seatNoService.getAvailableSeatNumbers(bookingRequest)).thenReturn(Set.of(3,4));
+        when(seatService.getAvailableSeatNumbers(bookingRequest)).thenReturn(Set.of(3,4));
 
-        when(seatInfoTrackerService.getCountOfConfirmedSeats(bookingRequest)).thenReturn(2);
+        when(seatService.getCountOfConfirmedSeats(bookingRequest)).thenReturn(2);
 
         when(bookingInfoTrackerService.trackBooking(any(Passenger.class),any(BookingRequest.class),
                 any(BookingStatus.class),anyInt())).thenReturn(2);
 
-        doNothing().when(seatInfoTrackerService)
+        doNothing().when(seatService)
                 .trackLastSeatNo(any(BookingRequest.class),anyInt());
 
-        doNothing().when(seatInfoTrackerService)
+        doNothing().when(seatService)
                 .trackCountOfSeats(bookingRequest,4);
 
         BookingResponse bookingResponse = bookingServiceUnderTest.book(bookingRequest);
@@ -409,11 +411,11 @@ class BookingServiceTest {
         //then
         when(trainService.getTrainByNo(trainNo)).thenReturn(Optional.of(new Train()));
 
-        doNothing().when(bookingOpenInfoService)
+        doNothing().when(bookingService)
                 .addBookingOpenInfo(trainNo,bookingOpenRequest);
 
-        doNothing().when(seatInfoTrackerService)
-                        .initSeatInfoTracker(trainNo,bookingOpenRequest);
+        doNothing().when(seatService)
+                        .initialize(trainNo,bookingOpenRequest);
 
         //when
         BookingOpenResponse bookingOpenResponse = bookingServiceUnderTest.openBooking(trainNo,bookingOpenRequest);
@@ -422,20 +424,20 @@ class BookingServiceTest {
         //Verify TrainNo
         ArgumentCaptor<Integer> trainNoCaptor = ArgumentCaptor.forClass(Integer.class);
 
-        verify(bookingOpenInfoService).addBookingOpenInfo(trainNoCaptor.capture(),eq(bookingOpenRequest));
+        verify(bookingService).addBookingOpenInfo(trainNoCaptor.capture(),eq(bookingOpenRequest));
         assertEquals(trainNo,trainNoCaptor.getValue());
 
-        verify(seatInfoTrackerService).initSeatInfoTracker(trainNoCaptor.capture(),eq(bookingOpenRequest));
+        verify(seatService).initialize(trainNoCaptor.capture(),eq(bookingOpenRequest));
         assertEquals(trainNo,trainNoCaptor.getValue());
 
 
         //Verify BookingOpenRequest
         ArgumentCaptor<BookingOpenRequest> bookingOpenRequestCaptor = ArgumentCaptor.forClass(BookingOpenRequest.class);
 
-        verify(bookingOpenInfoService).addBookingOpenInfo(eq(trainNo),bookingOpenRequestCaptor.capture());
+        verify(bookingService).addBookingOpenInfo(eq(trainNo),bookingOpenRequestCaptor.capture());
         assertEquals(bookingOpenRequest,bookingOpenRequestCaptor.getValue());
 
-        verify(seatInfoTrackerService).initSeatInfoTracker(eq(trainNo),bookingOpenRequestCaptor.capture());
+        verify(seatService).initialize(eq(trainNo),bookingOpenRequestCaptor.capture());
         assertEquals(bookingOpenRequest,bookingOpenRequestCaptor.getValue());
 
 
@@ -447,5 +449,87 @@ class BookingServiceTest {
 
     @Test
     void testGetBookingOpenInfo() {
+    }
+
+    @Test
+    void testAddBookingOpenInfo() {
+
+        //given
+        BookingOpenRequest bookingOpenRequest =
+                new BookingOpenRequest(startDate.format(pattern),endDate.format(pattern));
+
+        BookingOpen bookingOpenExpected = new BookingOpen(1, Utils.toLocalDate(bookingOpenRequest.getStartDt()),
+                Utils.toLocalDate(bookingOpenRequest.getEndDt()),true,
+                Timestamp.from(Instant.now()));
+
+        //when
+        when(bookingOpenRepo.save(any(BookingOpen.class))).thenReturn(any(BookingOpen.class));
+
+        bookingServiceUnderTest.addBookingOpenInfo(1,bookingOpenRequest);
+
+        //then
+        ArgumentCaptor<BookingOpen> bookingOpenArgumentCaptor = ArgumentCaptor.forClass(BookingOpen.class);
+
+        verify(bookingOpenRepo).save(bookingOpenArgumentCaptor.capture());
+
+        BookingOpen bookingOpenActual = bookingOpenArgumentCaptor.getValue();
+        assertTrue(bookingOpenExpected.equals(bookingOpenActual));
+    }
+
+    @Test
+    void testWhenBookingIsOpen() {
+
+        //given
+        BookingRequest bookingRequest = new BookingRequest();
+        bookingRequest.setTrainNo(1);
+        bookingRequest.setStartDt(startDate.format(pattern));
+        bookingRequest.setEndDt(endDate.format(pattern));
+
+        //when
+        when(bookingOpenRepo.isBookingOpen(1,startDate,endDate)).thenReturn(Optional.of(true));
+        Optional<Boolean> isBookingOpen = bookingServiceUnderTest.isBookingOpen(bookingRequest);
+
+        //then
+        assertEquals(true,isBookingOpen.get());
+
+    }
+
+    @Test
+    void testWhenBookingIsClosed() {
+
+        //given
+        BookingRequest bookingRequest = new BookingRequest();
+        bookingRequest.setTrainNo(1);
+        bookingRequest.setStartDt(startDate.format(pattern));
+        bookingRequest.setEndDt(endDate.format(pattern));
+
+        //when
+        when(bookingOpenRepo.isBookingOpen(1,startDate,endDate)).thenReturn(Optional.of(false));
+        Optional<Boolean> isBookingOpen = bookingServiceUnderTest.isBookingOpen(bookingRequest);
+
+        //then
+        assertTrue(isBookingOpen.isEmpty());
+
+    }
+
+    @Test
+    void testFindBookingOpenInfoByTrainNo() {
+
+        //given
+        int trainNo=1;
+
+
+        BookingOpen bookingOpenExpected = new BookingOpen(trainNo, startDate,
+                endDate,true,
+                Timestamp.from(Instant.now()));
+
+
+        //when
+        when(bookingOpenRepo.findByTrainNo(trainNo)).thenReturn(List.of(bookingOpenExpected));
+
+        BookingOpen bookingOpenActual = bookingServiceUnderTest.getBookingOpenInfoByTrainNo(trainNo).getFirst();
+
+        //then
+        assertTrue(bookingOpenExpected.equals(bookingOpenActual));
     }
 }

@@ -4,7 +4,7 @@ import com.rail.app.railreservation.booking.dto.BookingRequest;
 import com.rail.app.railreservation.booking.entity.Booking;
 import com.rail.app.railreservation.booking.service.BookingInfoTrackerService;
 import com.rail.app.railreservation.booking.service.BookingService;
-import com.rail.app.railreservation.booking.service.SeatNoService;
+import com.rail.app.railreservation.booking.service.SeatService;
 import com.rail.app.railreservation.enquiry.exception.PnrNoIncorrectException;
 import com.rail.app.railreservation.trainmanagement.service.TrainArrivalDateService;
 import com.rail.app.railreservation.trainmanagement.service.TrainService;
@@ -40,19 +40,19 @@ public class EnquiryService {
     private final BookingService bookingService;
     private final TrainArrivalDateService trainArrivalDateService;
 
-    private final SeatNoService seatNoService;
+    private final SeatService seatService;
     private final ModelMapper mapper;
 
     public EnquiryService(RouteInfoService routeInfoService, TrainService trainService,
                           BookingInfoTrackerService bookingInfoTrackerService,
                           BookingService bookingService, TrainArrivalDateService trainArrivalDateService,
-                          SeatNoService seatNoService, ModelMapper mapper) {
+                          SeatService seatService, ModelMapper mapper) {
         this.routeInfoService = routeInfoService;
         this.trainService = trainService;
         this.bookingInfoTrackerService = bookingInfoTrackerService;
         this.bookingService = bookingService;
         this.trainArrivalDateService = trainArrivalDateService;
-        this.seatNoService = seatNoService;
+        this.seatService = seatService;
         this.mapper = mapper;
     }
 
@@ -181,7 +181,7 @@ public class EnquiryService {
         seatEnquiryResponse.setTrainNo(trainNo);
 
         int seatsAvailable;
-        seatsAvailable = seatNoService.getAvailableSeatNumbers(bookingRequest).size();
+        seatsAvailable = seatService.getAvailableSeatNumbers(bookingRequest).size();
         seatEnquiryResponse.setSeatsAvailable(seatsAvailable);
 
         return seatEnquiryResponse;

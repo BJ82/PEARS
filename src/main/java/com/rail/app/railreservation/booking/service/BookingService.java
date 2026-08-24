@@ -7,6 +7,7 @@ import com.rail.app.railreservation.booking.enums.BookingStatus;
 import com.rail.app.railreservation.booking.exception.BookingCannotOpenException;
 import com.rail.app.railreservation.booking.exception.BookingNotOpenException;
 import com.rail.app.railreservation.booking.exception.InvalidBookingException;
+import com.rail.app.railreservation.booking.repository.BookingOpenRepository;
 import com.rail.app.railreservation.enquiry.exception.PnrNoIncorrectException;
 import com.rail.app.railreservation.enquiry.exception.TrainNotFoundException;
 import com.rail.app.railreservation.route.entity.Route;
@@ -41,33 +42,32 @@ public class BookingService {
 
     private final RouteInfoService routeInfoService;
 
-    private final SeatInfoTrackerService seatInfoTrackerService;
-
     private final BookingInfoTrackerService bookingInfoTrackerService;
 
-    private final BookingOpenInfoService bookingOpenInfoService;
+    private final BookingService bookingService;
+
+    private final BookingOpenRepository bookingOpenRepo;
 
     private final TrainArrivalDateService trainArrivalDateService;
 
-    private final SeatNoService seatNoService;
+    private final SeatService seatService;
     private final ModelMapper mapper;
 
     public BookingService(TrainService trainService,
                           RouteInfoService routeInfoService,
-                          SeatInfoTrackerService seatInfoTrackerService,
                           BookingInfoTrackerService bookingInfoTrackerService,
-                          BookingOpenInfoService bookingOpenInfoService,
+                          BookingService bookingService, BookingOpenRepository bookingOpenRepo,
                           TrainArrivalDateService trainArrivalDateService,
-                          SeatNoService seatNoService,
+                          SeatService seatService,
                           ModelMapper mapper) {
 
         this.trainService = trainService;
         this.routeInfoService = routeInfoService;
-        this.seatInfoTrackerService = seatInfoTrackerService;
         this.bookingInfoTrackerService = bookingInfoTrackerService;
-        this.bookingOpenInfoService = bookingOpenInfoService;
+        this.bookingService = bookingService;
+        this.bookingOpenRepo = bookingOpenRepo;
         this.trainArrivalDateService = trainArrivalDateService;
-        this.seatNoService = seatNoService;
+        this.seatService = seatService;
         this.mapper = mapper;
         this.seatNumbers = Collections.synchronizedSet(new LinkedHashSet<>());
         this.pnrs = Collections.synchronizedList(new ArrayList<>());
@@ -87,7 +87,7 @@ public class BookingService {
                 .orElseThrow(() -> new InvalidBookingException("TrainNo:" + request.getTrainNo() + " Not Running " + "Between " +
                                                                 request.getFrom() + "And " + request.getTo()));
         //Check If Booking Is Allowed
-        bookingOpenInfoService.isBookingOpen(request).orElseThrow(()->new BookingNotOpenException("Booking Not Yet Open For TrainNo:"+request.getTrainNo()+" For Dates "+request.getStartDt()+" And "+request.getEndDt()
+        bookingService.isBookingOpen(request).orElseThrow(()->new BookingNotOpenException("Booking Not Yet Open For TrainNo:"+request.getTrainNo()+" For Dates "+request.getStartDt()+" And "+request.getEndDt()
                                                                       )
                                           );
 
@@ -113,11 +113,11 @@ public class BookingService {
 
 
         seatNumbers.clear();
-        seatNumbers.addAll(seatNoService.getAvailableSeatNumbers(request));
+        seatNumbers.addAll(seatService.getAvailableSeatNumbers(request));
 
         pnrs.clear();
 
-        int seatCount = seatInfoTrackerService.getCountOfConfirmedSeats(request);
+        int seatCount = seatService.getCountOfConfirmedSeats(request);
         int seatNumber = 0;
         BookingStatus bookingStatus = BookingStatus.CONFIRMED;
 
@@ -150,12 +150,12 @@ public class BookingService {
 
         if(lastSeatNumber != 0) {
 
-            seatInfoTrackerService.trackLastSeatNo(request,lastSeatNumber);
+            seatService.trackLastSeatNo(request,lastSeatNumber);
 
         }
 
 
-        seatInfoTrackerService.trackCountOfSeats(request,seatCount);
+        seatService.trackCountOfSeats(request,seatCount);
 
         BookingResponse bookingResponse = mapper.map(request, BookingResponse.class);
         bookingResponse.setBookingDateTime(Timestamp.from(Instant.now()));
@@ -258,9 +258,9 @@ public class BookingService {
                 trainNo,request.getStartDt(),request.getEndDt());
 
 
-        bookingOpenInfoService.addBookingOpenInfo(trainNo,request);
+        bookingService.addBookingOpenInfo(trainNo,request);
 
-        seatInfoTrackerService.initSeatInfoTracker(trainNo,request);
+        seatService.initialize(trainNo,request);
 
         logger.info("Booking Opened For TrainNo:{}, StartDate:{}, EndDate:{}",
                 trainNo,request.getStartDt(),request.getEndDt());
@@ -272,7 +272,7 @@ public class BookingService {
     public BookingOpenInfo getBookingOpenInfo(int trainNo){
 
         List<BookingOpen> bookingOpens;
-        bookingOpens = bookingOpenInfoService.getBookingOpenInfoByTrainNo(trainNo);
+        bookingOpens = bookingService.getBookingOpenInfoByTrainNo(trainNo);
 
         List<BookingOpenDate> bookingOpenDates = new ArrayList<>();
 
@@ -283,7 +283,34 @@ public class BookingService {
         return new BookingOpenInfo(trainNo,bookingOpenDates);
     }
 
-     protected Optional<Boolean> isValidRoute(String jurnyStartStn,String jurnyEndStn,Train trn){
+    public void addBookingOpenInfo(int trainNo, BookingOpenRequest request){
+
+        bookingOpenRepo.save(new BookingOpen(trainNo, Utils.toLocalDate(request.getStartDt()),
+                        Utils.toLocalDate(request.getEndDt()),true,
+                        Timestamp.from(Instant.now())
+                )
+        );
+
+    }
+
+    public Optional<Boolean> isBookingOpen(BookingRequest request){
+
+        Optional<Boolean> isBookingOpenAsOptional = bookingOpenRepo.isBookingOpen(request.getTrainNo(),Utils.toLocalDate(request.getStartDt()),
+                Utils.toLocalDate(request.getEndDt()));
+
+        if(isBookingOpenAsOptional.get() == true)
+            return isBookingOpenAsOptional;
+
+        return Optional.empty();
+    }
+
+    public List<BookingOpen> getBookingOpenInfoByTrainNo(int trainNo){
+
+        return bookingOpenRepo.findByTrainNo(trainNo);
+    }
+
+
+    protected Optional<Boolean> isValidRoute(String jurnyStartStn,String jurnyEndStn,Train trn){
 
             boolean isRouteValid = false;
 

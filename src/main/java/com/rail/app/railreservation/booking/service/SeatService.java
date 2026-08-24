@@ -1,11 +1,19 @@
 package com.rail.app.railreservation.booking.service;
 
+import com.rail.app.railreservation.booking.dto.BookingOpenRequest;
 import com.rail.app.railreservation.booking.dto.BookingRequest;
 import com.rail.app.railreservation.booking.entity.Booking;
+import com.rail.app.railreservation.booking.entity.SeatCount;
+import com.rail.app.railreservation.booking.entity.SeatNoTracker;
+import com.rail.app.railreservation.booking.repository.BookingRepository;
+import com.rail.app.railreservation.booking.repository.SeatCountRepository;
+import com.rail.app.railreservation.booking.repository.SeatNoTrackerRepository;
 import com.rail.app.railreservation.route.entity.Route;
 import com.rail.app.railreservation.route.service.RouteInfoService;
 import com.rail.app.railreservation.trainmanagement.entity.Train;
+import com.rail.app.railreservation.trainmanagement.enums.JourneyClass;
 import com.rail.app.railreservation.trainmanagement.service.TrainService;
+import com.rail.app.railreservation.util.Utils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
@@ -13,9 +21,13 @@ import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 
 @Service
-public class SeatNoService {
+public class SeatService {
 
-    private final SeatInfoTrackerService seatInfoTrackerService;
+    private final SeatNoTrackerRepository seatNoTrackerRepo;
+
+    private final SeatCountRepository seatCountRepo;
+
+    private final BookingRepository bookingRepo;
 
     private final BookingInfoTrackerService bookingInfoTrackerService;
 
@@ -25,11 +37,13 @@ public class SeatNoService {
 
     private final int totalNoOfSeats;
 
-    public SeatNoService(SeatInfoTrackerService seatInfoTrackerService, BookingInfoTrackerService bookingInfoTrackerService,
-                         RouteInfoService routeInfoService, TrainService trainService,
-                         @Value("${total.no.of.seats}") int totalNoOfSeats) {
+    public SeatService(SeatNoTrackerRepository seatNoTrackerRepo, SeatCountRepository seatCountRepo, BookingRepository bookingRepo, BookingInfoTrackerService bookingInfoTrackerService,
+                       RouteInfoService routeInfoService, TrainService trainService,
+                       @Value("${total.no.of.seats}") int totalNoOfSeats) {
 
-        this.seatInfoTrackerService = seatInfoTrackerService;
+        this.seatNoTrackerRepo = seatNoTrackerRepo;
+        this.seatCountRepo = seatCountRepo;
+        this.bookingRepo = bookingRepo;
         this.bookingInfoTrackerService = bookingInfoTrackerService;
         this.routeInfoService = routeInfoService;
         this.trainService = trainService;
@@ -44,10 +58,10 @@ public class SeatNoService {
         seatNums = Collections.synchronizedSet(new LinkedHashSet<>());
 
         AtomicInteger lstAllotedSeatNum;
-        lstAllotedSeatNum = new AtomicInteger(seatInfoTrackerService.getLastAllocatedSeatNo(request));
+        lstAllotedSeatNum = new AtomicInteger(getLastAllocatedSeatNo(request));
 
 
-        int seatsAvailable = totalNoOfSeats - seatInfoTrackerService.getLastAllocatedSeatNo(request);
+        int seatsAvailable = totalNoOfSeats - getLastAllocatedSeatNo(request);
 
         for(int i=1;i<=seatsAvailable;i++){
 
@@ -55,14 +69,16 @@ public class SeatNoService {
         }
 
 
-        //Obtain Seat Nos which would be free
-        //Before Journey Starts
+        //From already booked seats
+        //Obtain those which would become
+        //Vacant Before our Journey Starts
 
         seatNums.addAll(getSeatNosBefore(request));
 
 
-        //Obtain Seat Nos which would be used
-        //After Journey Ends
+        //From already booked seats
+        //Obtain those which would be
+        //Occupied After our Journey
 
         seatNums.addAll(getSeatNosAfter(request));
 
@@ -70,6 +86,75 @@ public class SeatNoService {
         return seatNums;
     }
 
+    public void trackLastSeatNo(BookingRequest request,int lastGivenSeatNo){
+
+        seatNoTrackerRepo.updateLastSeatNo(request.getTrainNo(),request.getJourneyClass(),
+                Utils.toLocalDate(request.getStartDt()),
+                Utils.toLocalDate(request.getEndDt()),lastGivenSeatNo);
+    }
+    public int getLastAllocatedSeatNo(BookingRequest request){
+
+        SeatNoTracker seatNoTracker = seatNoTrackerRepo.findSeatNoTracker(request.getTrainNo(),
+                request.getJourneyClass(),
+                Utils.toLocalDate(request.getStartDt()),
+                Utils.toLocalDate(request.getEndDt())
+        );
+
+        return seatNoTracker.getLstSeatNum();
+
+    }
+
+    public List<Integer> getSeatNumbers(String startFrom, String endAt, BookingRequest request){
+
+        return bookingRepo.findSeatNumbers(startFrom,endAt,request.getTrainNo(),
+                Utils.toLocalDate(request.getStartDt()),
+                Utils.toLocalDate(request.getEndDt()),
+                request.getJourneyClass());
+    }
+
+
+    public void trackCountOfSeats(BookingRequest request,int noOfConfirmedSeats){
+
+        seatCountRepo.updateSeatCount(request.getTrainNo(),request.getJourneyClass(),
+                Utils.toLocalDate(request.getStartDt()),
+                Utils.toLocalDate(request.getEndDt()),noOfConfirmedSeats);
+
+
+    }
+    public int getCountOfConfirmedSeats(BookingRequest request){
+
+        int seatCount = seatCountRepo.findSeatCount(request.getTrainNo(),
+                request.getJourneyClass(),
+                Utils.toLocalDate(request.getStartDt()),
+                Utils.toLocalDate(request.getEndDt()));
+
+        return seatCount;
+
+    }
+
+
+
+
+
+    public void initialize(int trainNo, BookingOpenRequest request){
+
+        for(JourneyClass jrnyClass:JourneyClass.values()){
+
+            seatNoTrackerRepo.save(new SeatNoTracker(trainNo,
+                            jrnyClass,Utils.toLocalDate(request.getStartDt()),
+                            Utils.toLocalDate(request.getEndDt()),0
+                    )
+            );
+
+
+            seatCountRepo.save(new SeatCount(trainNo,
+                            Utils.toLocalDate(request.getStartDt()),
+                            Utils.toLocalDate(request.getEndDt()),jrnyClass,0
+                    )
+            );
+        }
+
+    }
     private Set<Integer> getSeatNosBefore(BookingRequest request){
 
         String src;
@@ -89,7 +174,7 @@ public class SeatNoService {
 
                 dest = allStations.get(j);
 
-                seatNums.addAll(seatInfoTrackerService.getSeatNumbers(src,dest,request));
+                seatNums.addAll(getSeatNumbers(src,dest,request));
 
             }
         }
@@ -149,7 +234,7 @@ public class SeatNoService {
 
                 dest = allStations.get(j);
 
-                seatNums.addAll(seatInfoTrackerService.getSeatNumbers(src,dest,request));
+                seatNums.addAll(getSeatNumbers(src,dest,request));
             }
         }
 
@@ -174,6 +259,8 @@ public class SeatNoService {
 
         return allStations;
     }
+
+
 
 
 }
