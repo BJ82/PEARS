@@ -10,12 +10,14 @@ import com.rail.app.railreservation.trainmanagement.dto.TrainAddRequest;
 import com.rail.app.railreservation.trainmanagement.dto.TrainAddResponse;
 import com.rail.app.railreservation.trainmanagement.dto.TrainInfo;
 import com.rail.app.railreservation.trainmanagement.exception.DuplicateTrainException;
+import com.rail.app.railreservation.trainmanagement.repository.TrainRepository;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.modelmapper.ModelMapper;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Optional;
 
 @Service
 public class TrainService {
@@ -24,17 +26,19 @@ public class TrainService {
 
     private static final String INSIDE_TRAIN_SERVICE = "Inside Train Service...";
 
-    private final TrainInfoService trainInfoService;
+    private final TrainRepository trainRepo;
+
     private final RouteInfoService routeInfoService;
 
     private final ModelMapper mapper;
 
     private Integer ROUTE_ID = null;
 
-    public TrainService(TrainInfoService trainInfoService, RouteInfoService routeInfoService, ModelMapper mapper) {
-        this.trainInfoService = trainInfoService;
+    public TrainService(TrainRepository trainRepo, RouteInfoService routeInfoService, ModelMapper mapper) {
+
         this.routeInfoService = routeInfoService;
         this.mapper = mapper;
+        this.trainRepo = trainRepo;
     }
 
 
@@ -69,22 +73,24 @@ public class TrainService {
         //Step3: If train not found then add train
         TrainAddResponse trnAddResponse = null;
         int trainNo = -1;
-        if (trainInfoService.getByTrainName(trnReq.getTrainName()).isEmpty()) {
 
-            logger.info("Step3:Adding Train with Name:{}",trnReq.getTrainName());
-            Train train = addTrain(trnReq,ROUTE_ID);
+        String trainName = trnReq.getTrainName();
+        Optional<Train> train = trainRepo.findByTrainName(trainName);
+        if (train.isEmpty()) {
 
-            if (train.getTrainNo() > 0){
+            logger.info("Step3:Adding Train with Name:{}",trainName);
+            Train trainAdded = addTrain(trnReq,ROUTE_ID);
 
-                trainNo = train.getTrainNo();
-                trnAddResponse = new TrainAddResponse(train.getTrainNo(), train.getTrainName(), src, dest, true);
-                logger.info("Successfully Added Train with Name:{}, TrainNo{} , running between {} and {}",train.getTrainName(),train.getTrainNo(),src,dest);
+            if (trainAdded.getTrainNo() > 0){
+
+                trnAddResponse = new TrainAddResponse(trainAdded.getTrainNo(), trainName, src, dest, true);
+                logger.info("Successfully Added Train with Name:{}, TrainNo{} , running between {} and {}",trainName,trainAdded.getTrainNo(),src,dest);
             }
 
         } else {
 
-            trainNo = trainInfoService.getByTrainName(trnReq.getTrainName()).get().getTrainNo();
-            throw new DuplicateTrainException(trnReq.getTrainName(),trainNo);
+            trainNo = train.get().getTrainNo();
+            throw new DuplicateTrainException(trainName,trainNo);
 
         }
         return trnAddResponse;
@@ -94,7 +100,7 @@ public class TrainService {
 
         Train train = mapper.map(trnAddReq,Train.class);
         train.setRouteId(routeID);
-        trainInfoService.addTrain(train);
+        trainRepo.save(train);
 
         return train;
     }
@@ -104,7 +110,7 @@ public class TrainService {
         logger.info(INSIDE_TRAIN_SERVICE);
         logger.info("Getting All Trains...");
 
-        List<Train> trns = trainInfoService.getAllTrains();
+        List<Train> trns = trainRepo.findAll();
 
         if(trns.isEmpty())
             throw new TrainNotFoundException("No Train Found.Pls Add New Train");
@@ -123,4 +129,22 @@ public class TrainService {
 
         return allTrainResponse;
     }
+
+    public  Optional<Train> getTrainByNo(int trainNo){
+
+        return trainRepo.findByTrainNo(trainNo);
+
+    }
+
+    public Optional<Train> getTrainByName(String trainName){
+
+        return trainRepo.findByTrainName(trainName);
+
+    }
+
+    public List<Train> getTrainByRouteIds(List<Integer> routeIDs){
+
+        return trainRepo.findByRouteIdIn(routeIDs);
+    }
+
 }

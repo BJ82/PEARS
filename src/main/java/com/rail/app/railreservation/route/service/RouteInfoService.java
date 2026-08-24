@@ -78,9 +78,11 @@ public class RouteInfoService {
             isCompatible = false;
             stations = resolveRoute(b).getStations();
             allStations = String.join("", stations);
-            if (allStations.indexOf(startFrom) == -1 || allStations.indexOf(startFrom) == allStations.indexOf(stations.getLast())) {
+            if (allStations.indexOf(startFrom) == -1
+                    || allStations.indexOf(startFrom) == allStations.indexOf(stations.getLast())) {
 
-                if (allStations.indexOf(endAt) == -1 || allStations.indexOf(endAt) == allStations.indexOf(stations.getFirst())) {
+                if (allStations.indexOf(endAt) == -1
+                        || allStations.indexOf(endAt) == allStations.indexOf(stations.getFirst())) {
 
                     isCompatible = true;
                 }

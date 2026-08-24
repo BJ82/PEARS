@@ -14,7 +14,7 @@ import com.rail.app.railreservation.route.service.RouteInfoService;
 import com.rail.app.railreservation.trainmanagement.entity.Train;
 import com.rail.app.railreservation.trainmanagement.exception.TimeTableNotFoundException;
 import com.rail.app.railreservation.trainmanagement.service.TrainArrivalDateService;
-import com.rail.app.railreservation.trainmanagement.service.TrainInfoService;
+import com.rail.app.railreservation.trainmanagement.service.TrainService;
 import com.rail.app.railreservation.util.Utils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -37,7 +37,7 @@ public class BookingService {
 
     private final List<Integer> pnrs;
 
-    private final TrainInfoService trainInfoService;
+    private final TrainService trainService;
 
     private final RouteInfoService routeInfoService;
 
@@ -52,7 +52,7 @@ public class BookingService {
     private final SeatNoService seatNoService;
     private final ModelMapper mapper;
 
-    public BookingService(TrainInfoService trainInfoService,
+    public BookingService(TrainService trainService,
                           RouteInfoService routeInfoService,
                           SeatInfoTrackerService seatInfoTrackerService,
                           BookingInfoTrackerService bookingInfoTrackerService,
@@ -61,7 +61,7 @@ public class BookingService {
                           SeatNoService seatNoService,
                           ModelMapper mapper) {
 
-        this.trainInfoService = trainInfoService;
+        this.trainService = trainService;
         this.routeInfoService = routeInfoService;
         this.seatInfoTrackerService = seatInfoTrackerService;
         this.bookingInfoTrackerService = bookingInfoTrackerService;
@@ -79,7 +79,7 @@ public class BookingService {
         logger.info(INSIDE_BOOKING_SERVICE);
 
         //Check if Train No is Valid
-        Train trn = trainInfoService.getByTrainNo(request.getTrainNo())
+        Train trn = trainService.getTrainByNo(request.getTrainNo())
                 .orElseThrow(() -> new InvalidBookingException("Booking Not Allowed On Non Existent Train"));
 
         //Check if Route is valid
@@ -251,7 +251,7 @@ public class BookingService {
         if(startDt.isBefore(LocalDate.now()))
             throw new BookingCannotOpenException("Booking Open Date Cannot Be In Past.");
 
-        trainInfoService.getByTrainNo(trainNo)
+        trainService.getTrainByNo(trainNo)
                 .orElseThrow(() -> new BookingCannotOpenException("Not Allowed To Open Booking On Non Existent Train"));
 
         logger.info("Processing To Open Booking For TrainNo:{}, StartDate:{}, EndDate{}",

@@ -5,7 +5,7 @@ import com.rail.app.railreservation.booking.entity.Booking;
 import com.rail.app.railreservation.route.entity.Route;
 import com.rail.app.railreservation.route.service.RouteInfoService;
 import com.rail.app.railreservation.trainmanagement.entity.Train;
-import com.rail.app.railreservation.trainmanagement.service.TrainInfoService;
+import com.rail.app.railreservation.trainmanagement.service.TrainService;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
@@ -21,18 +21,18 @@ public class SeatNoService {
 
     private final RouteInfoService routeInfoService;
 
-    private final TrainInfoService trainInfoService;
+    private final TrainService trainService;
 
     private final int totalNoOfSeats;
 
     public SeatNoService(SeatInfoTrackerService seatInfoTrackerService, BookingInfoTrackerService bookingInfoTrackerService,
-                         RouteInfoService routeInfoService, TrainInfoService trainInfoService,
+                         RouteInfoService routeInfoService, TrainService trainService,
                          @Value("${total.no.of.seats}") int totalNoOfSeats) {
 
         this.seatInfoTrackerService = seatInfoTrackerService;
         this.bookingInfoTrackerService = bookingInfoTrackerService;
         this.routeInfoService = routeInfoService;
-        this.trainInfoService = trainInfoService;
+        this.trainService = trainService;
         this.totalNoOfSeats = totalNoOfSeats;
     }
 
@@ -161,7 +161,7 @@ public class SeatNoService {
 
         List<String> allStations = new ArrayList<>();
 
-        Optional<Train> trainOpt = trainInfoService.getByTrainNo(trainNo);
+        Optional<Train> trainOpt = trainService.getTrainByNo(trainNo);
 
         if(trainOpt.isPresent()){
 

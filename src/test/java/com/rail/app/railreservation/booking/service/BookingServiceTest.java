@@ -13,7 +13,7 @@ import com.rail.app.railreservation.trainmanagement.entity.Train;
 import com.rail.app.railreservation.trainmanagement.enums.JourneyClass;
 import com.rail.app.railreservation.trainmanagement.exception.TimeTableNotFoundException;
 import com.rail.app.railreservation.trainmanagement.service.TrainArrivalDateService;
-import com.rail.app.railreservation.trainmanagement.service.TrainInfoService;
+import com.rail.app.railreservation.trainmanagement.service.TrainService;
 import com.rail.app.railreservation.util.Utils;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -44,7 +44,7 @@ class BookingServiceTest {
 
     private BookingServiceForTest bookingServiceUnderTest;
 
-    @Mock private TrainInfoService trainInfoService;
+    @Mock private TrainService trainService;
 
     @Mock private RouteInfoService routeInfoService;
 
@@ -78,7 +78,7 @@ class BookingServiceTest {
 
         mapper = new ModelMapper();
 
-        bookingServiceUnderTest = new BookingServiceForTest(trainInfoService,routeInfoService,
+        bookingServiceUnderTest = new BookingServiceForTest(trainService,routeInfoService,
                 seatInfoTrackerService,bookingInfoTrackerService,bookingOpenInfoService,trainArrivalDateService,
                 seatNoService,mapper);
 
@@ -115,7 +115,7 @@ class BookingServiceTest {
 
 
         //when
-        when(trainInfoService.getByTrainNo(1)).thenReturn(Optional.empty());
+        when(trainService.getTrainByNo(1)).thenReturn(Optional.empty());
 
         //then
         assertThrows(InvalidBookingException.class,()-> bookingServiceUnderTest.book(bookingRequest));
@@ -137,7 +137,7 @@ class BookingServiceTest {
 
 
         //when
-        when(trainInfoService.getByTrainNo(1)).thenReturn(Optional.of(train));
+        when(trainService.getTrainByNo(1)).thenReturn(Optional.of(train));
 
         when(routeInfoService.getByRouteId(1)).thenReturn(Optional.of(route));
 
@@ -155,7 +155,7 @@ class BookingServiceTest {
 
 
         //when
-        when(trainInfoService.getByTrainNo(1)).thenReturn(Optional.of(train));
+        when(trainService.getTrainByNo(1)).thenReturn(Optional.of(train));
 
         when(routeInfoService.getByRouteId(1)).thenReturn(Optional.of(route));
 
@@ -174,7 +174,7 @@ class BookingServiceTest {
 
         //given
 
-        when(trainInfoService.getByTrainNo(1)).thenReturn(Optional.of(train));
+        when(trainService.getTrainByNo(1)).thenReturn(Optional.of(train));
 
         when(routeInfoService.getByRouteId(1)).thenReturn(Optional.of(route));
 
@@ -197,7 +197,7 @@ class BookingServiceTest {
 
         //given
 
-        when(trainInfoService.getByTrainNo(1)).thenReturn(Optional.of(train));
+        when(trainService.getTrainByNo(1)).thenReturn(Optional.of(train));
 
         when(routeInfoService.getByRouteId(1)).thenReturn(Optional.of(route));
 
@@ -243,7 +243,7 @@ class BookingServiceTest {
 
         //given
 
-        when(trainInfoService.getByTrainNo(1)).thenReturn(Optional.of(train));
+        when(trainService.getTrainByNo(1)).thenReturn(Optional.of(train));
 
         when(routeInfoService.getByRouteId(1)).thenReturn(Optional.of(route));
 
@@ -407,7 +407,7 @@ class BookingServiceTest {
         BookingOpenRequest bookingOpenRequest = new BookingOpenRequest(startDt,endDt);
 
         //then
-        when(trainInfoService.getByTrainNo(trainNo)).thenReturn(Optional.of(new Train()));
+        when(trainService.getTrainByNo(trainNo)).thenReturn(Optional.of(new Train()));
 
         doNothing().when(bookingOpenInfoService)
                 .addBookingOpenInfo(trainNo,bookingOpenRequest);

@@ -7,10 +7,10 @@ import com.rail.app.railreservation.booking.service.BookingService;
 import com.rail.app.railreservation.booking.service.SeatNoService;
 import com.rail.app.railreservation.enquiry.exception.PnrNoIncorrectException;
 import com.rail.app.railreservation.trainmanagement.service.TrainArrivalDateService;
+import com.rail.app.railreservation.trainmanagement.service.TrainService;
 import com.rail.app.railreservation.util.Utils;
 import com.rail.app.railreservation.trainmanagement.entity.Train;
 import com.rail.app.railreservation.route.service.RouteInfoService;
-import com.rail.app.railreservation.trainmanagement.service.TrainInfoService;
 import com.rail.app.railreservation.enquiry.dto.PnrEnquiryResponse;
 import com.rail.app.railreservation.enquiry.dto.SeatEnquiryRequest;
 import com.rail.app.railreservation.enquiry.dto.SeatEnquiryResponse;
@@ -35,7 +35,7 @@ public class EnquiryService {
     private static final Logger logger = LogManager.getLogger(EnquiryService.class);
     private static final String INSIDE_ENQUIRY_SERVICE = "Inside EnquiryService Service...";
     private final RouteInfoService routeInfoService;
-    private final TrainInfoService trainInfoService;
+    private final TrainService trainService;
     private final BookingInfoTrackerService bookingInfoTrackerService;
     private final BookingService bookingService;
     private final TrainArrivalDateService trainArrivalDateService;
@@ -43,10 +43,12 @@ public class EnquiryService {
     private final SeatNoService seatNoService;
     private final ModelMapper mapper;
 
-    public EnquiryService(RouteInfoService routeInfoService, TrainInfoService trainInfoService, BookingInfoTrackerService bookingInfoTrackerService,
-                          BookingService bookingService, TrainArrivalDateService trainArrivalDateService, SeatNoService seatNoService, ModelMapper mapper) {
+    public EnquiryService(RouteInfoService routeInfoService, TrainService trainService,
+                          BookingInfoTrackerService bookingInfoTrackerService,
+                          BookingService bookingService, TrainArrivalDateService trainArrivalDateService,
+                          SeatNoService seatNoService, ModelMapper mapper) {
         this.routeInfoService = routeInfoService;
-        this.trainInfoService = trainInfoService;
+        this.trainService = trainService;
         this.bookingInfoTrackerService = bookingInfoTrackerService;
         this.bookingService = bookingService;
         this.trainArrivalDateService = trainArrivalDateService;
@@ -84,7 +86,7 @@ public class EnquiryService {
         ModelMapper modelMapper = new ModelMapper();
 
         //Step3: Obtain trains that are running on parentRouteIds
-        List<Train> availableTrains = trainInfoService.getByRouteIds(parentRouteIds);
+        List<Train> availableTrains = trainService.getTrainByRouteIds(parentRouteIds);
 
 
         if(availableTrains.isEmpty())
@@ -112,7 +114,7 @@ public class EnquiryService {
         logger.info("Searching For Train With TrainNo:{}", trainNo);
 
 
-        Train trn = trainInfoService.getByTrainNo(trainNo).
+        Train trn = trainService.getTrainByNo(trainNo).
                 orElseThrow(() -> new TrainNotFoundException("Train Not Found For TrainNo: " + trainNo, trainNo));
 
 
@@ -154,7 +156,7 @@ public class EnquiryService {
         List<Integer> parentRouteIds;
         parentRouteIds = new ArrayList<>(getParentRoutes(src, dest));
 
-        List<Train> availableTrains = trainInfoService.getByRouteIds(parentRouteIds);
+        List<Train> availableTrains = trainService.getTrainByRouteIds(parentRouteIds);
 
 
         if(availableTrains.isEmpty())
