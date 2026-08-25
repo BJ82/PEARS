@@ -8,6 +8,7 @@ import com.rail.app.railreservation.booking.exception.BookingCannotOpenException
 import com.rail.app.railreservation.booking.exception.BookingNotOpenException;
 import com.rail.app.railreservation.booking.exception.InvalidBookingException;
 import com.rail.app.railreservation.booking.repository.BookingOpenRepository;
+import com.rail.app.railreservation.booking.repository.BookingRepository;
 import com.rail.app.railreservation.enquiry.exception.PnrNoIncorrectException;
 import com.rail.app.railreservation.route.entity.Route;
 import com.rail.app.railreservation.route.service.RouteInfoService;
@@ -24,6 +25,8 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.junit.jupiter.MockitoSettings;
+import org.mockito.quality.Strictness;
 import org.modelmapper.ModelMapper;
 
 import java.sql.Timestamp;
@@ -36,12 +39,13 @@ import java.util.Optional;
 import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.AdditionalMatchers.not;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.Mockito.*;
-import static org.mockito.AdditionalMatchers.not;
 
 @ExtendWith(MockitoExtension.class)
+@MockitoSettings(strictness = Strictness.WARN)
 class BookingServiceTest {
 
     private BookingServiceForTest bookingServiceUnderTest;
@@ -53,6 +57,10 @@ class BookingServiceTest {
     @Mock private BookingInfoTrackerService bookingInfoTrackerService;
 
     @Mock private BookingService bookingService;
+
+    @Mock private Booking booking;
+
+    @Mock private BookingRepository bookingRepo;
 
     @Mock private BookingOpenRepository bookingOpenRepo;
 
@@ -81,7 +89,7 @@ class BookingServiceTest {
         mapper = new ModelMapper();
 
         bookingServiceUnderTest = new BookingServiceForTest(trainService,routeInfoService,
-                bookingInfoTrackerService,bookingService,bookingOpenRepo,trainArrivalDateService,
+                bookingInfoTrackerService,bookingService,bookingRepo,bookingOpenRepo,trainArrivalDateService,
                 seatService,mapper);
 
 
@@ -218,11 +226,26 @@ class BookingServiceTest {
 
         when(seatService.getCountOfConfirmedSeats(bookingRequest)).thenReturn(1);
 
-        when(bookingInfoTrackerService.trackBooking(any(Passenger.class),any(BookingRequest.class),
-                any(BookingStatus.class),anyInt())).thenReturn(2);
+        Booking b1 = new Booking("First Passenger",24,"M",1,startDate,endDate,bookingRequest.getFrom(),
+                                        bookingRequest.getTo(),Utils.toLocalDate(bookingRequest.getDoj()),
+                                        bookingRequest.getJourneyClass(),BookingStatus.CONFIRMED,Timestamp.from(Instant.now()),2
+                                );
+
+        Booking b2 = new Booking("Second Passenger",25,"F",1,startDate,endDate,bookingRequest.getFrom(),
+                                        bookingRequest.getTo(),Utils.toLocalDate(bookingRequest.getDoj()),
+                                        bookingRequest.getJourneyClass(),BookingStatus.CONFIRMED,Timestamp.from(Instant.now()),3
+                                 );
+
+        Booking b3 = new Booking("Third Passenger",26,"F",1,startDate,endDate,bookingRequest.getFrom(),
+                                        bookingRequest.getTo(),Utils.toLocalDate(bookingRequest.getDoj()),
+                                        bookingRequest.getJourneyClass(),BookingStatus.CONFIRMED,Timestamp.from(Instant.now()),4
+                                );
+
+        when(bookingRepo.save(any(Booking.class))).thenReturn(b1,b2,b3);
+        when(booking.getPnr()).thenReturn(1,2,3);
 
         doNothing().when(seatService)
-                .trackLastSeatNo(any(BookingRequest.class),anyInt());
+                .trackLastSeatNo(any(BookingRequest.class),eq(4));
 
         doNothing().when(seatService)
                 .trackCountOfSeats(bookingRequest,4);
@@ -258,17 +281,30 @@ class BookingServiceTest {
                 Utils.toLocalDate(bookingRequest.getStartDt())))
                 .thenReturn(startDate.plusDays(1));
 
-
-
         when(seatService.getAvailableSeatNumbers(bookingRequest)).thenReturn(Set.of(3,4));
 
         when(seatService.getCountOfConfirmedSeats(bookingRequest)).thenReturn(2);
 
-        when(bookingInfoTrackerService.trackBooking(any(Passenger.class),any(BookingRequest.class),
-                any(BookingStatus.class),anyInt())).thenReturn(2);
+        Booking b1 = new Booking("First Passenger",24,"M",1,startDate,endDate,bookingRequest.getFrom(),
+                bookingRequest.getTo(),Utils.toLocalDate(bookingRequest.getDoj()),
+                bookingRequest.getJourneyClass(),BookingStatus.CONFIRMED,Timestamp.from(Instant.now()),3
+        );
+
+        Booking b2 = new Booking("Second Passenger",25,"F",1,startDate,endDate,bookingRequest.getFrom(),
+                bookingRequest.getTo(),Utils.toLocalDate(bookingRequest.getDoj()),
+                bookingRequest.getJourneyClass(),BookingStatus.CONFIRMED,Timestamp.from(Instant.now()),4
+        );
+
+        Booking b3 = new Booking("Third Passenger",26,"F",1,startDate,endDate,bookingRequest.getFrom(),
+                bookingRequest.getTo(),Utils.toLocalDate(bookingRequest.getDoj()),
+                bookingRequest.getJourneyClass(),BookingStatus.WAITING,Timestamp.from(Instant.now()),0
+        );
+
+        when(bookingRepo.save(any(Booking.class))).thenReturn(b1,b2,b3);
+        when(booking.getPnr()).thenReturn(1,2,3);
 
         doNothing().when(seatService)
-                .trackLastSeatNo(any(BookingRequest.class),anyInt());
+                .trackLastSeatNo(any(BookingRequest.class),eq(4));
 
         doNothing().when(seatService)
                 .trackCountOfSeats(bookingRequest,4);
@@ -351,8 +387,9 @@ class BookingServiceTest {
         //then
         when(bookingInfoTrackerService.getBookingByPnrNo(bookingToCancel.getPnr())).thenReturn(Optional.of(bookingToCancel));
 
-        when(bookingInfoTrackerService.getWaitingList(bookingToCancel.getTrainNo(),bookingToCancel.getJourneyClass(),
-                bookingToCancel.getStartDt(),bookingToCancel.getEndDt())).thenReturn(Optional.of(waitingList));
+        when(bookingRepo.findByBookingStatus(BookingStatus.WAITING,bookingToCancel.getTrainNo(),
+                bookingToCancel.getJourneyClass(),bookingToCancel.getStartDt(),bookingToCancel.getEndDt())).
+                thenReturn(Optional.of(waitingList));
 
         when(bookingInfoTrackerService.getBookingBySeatNumber(seatNo,bookingToCancel)).thenReturn(Optional.of(allBookings));
 

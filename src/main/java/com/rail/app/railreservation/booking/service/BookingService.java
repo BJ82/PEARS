@@ -8,11 +8,13 @@ import com.rail.app.railreservation.booking.exception.BookingCannotOpenException
 import com.rail.app.railreservation.booking.exception.BookingNotOpenException;
 import com.rail.app.railreservation.booking.exception.InvalidBookingException;
 import com.rail.app.railreservation.booking.repository.BookingOpenRepository;
+import com.rail.app.railreservation.booking.repository.BookingRepository;
 import com.rail.app.railreservation.enquiry.exception.PnrNoIncorrectException;
 import com.rail.app.railreservation.enquiry.exception.TrainNotFoundException;
 import com.rail.app.railreservation.route.entity.Route;
 import com.rail.app.railreservation.route.service.RouteInfoService;
 import com.rail.app.railreservation.trainmanagement.entity.Train;
+import com.rail.app.railreservation.trainmanagement.enums.JourneyClass;
 import com.rail.app.railreservation.trainmanagement.exception.TimeTableNotFoundException;
 import com.rail.app.railreservation.trainmanagement.service.TrainArrivalDateService;
 import com.rail.app.railreservation.trainmanagement.service.TrainService;
@@ -46,6 +48,8 @@ public class BookingService {
 
     private final BookingService bookingService;
 
+    private final BookingRepository bookingRepo;
+
     private final BookingOpenRepository bookingOpenRepo;
 
     private final TrainArrivalDateService trainArrivalDateService;
@@ -56,7 +60,7 @@ public class BookingService {
     public BookingService(TrainService trainService,
                           RouteInfoService routeInfoService,
                           BookingInfoTrackerService bookingInfoTrackerService,
-                          BookingService bookingService, BookingOpenRepository bookingOpenRepo,
+                          BookingService bookingService, BookingRepository bookingRepo, BookingOpenRepository bookingOpenRepo,
                           TrainArrivalDateService trainArrivalDateService,
                           SeatService seatService,
                           ModelMapper mapper) {
@@ -65,6 +69,7 @@ public class BookingService {
         this.routeInfoService = routeInfoService;
         this.bookingInfoTrackerService = bookingInfoTrackerService;
         this.bookingService = bookingService;
+        this.bookingRepo = bookingRepo;
         this.bookingOpenRepo = bookingOpenRepo;
         this.trainArrivalDateService = trainArrivalDateService;
         this.seatService = seatService;
@@ -140,7 +145,14 @@ public class BookingService {
             }
 
 
-            int pnrNo = bookingInfoTrackerService.trackBooking(psngr,request,bookingStatus,seatNumber);
+            Booking bkng =  bookingRepo.save(new Booking(psngr.getName(), psngr.getAge(), psngr.getSex(),
+                    request.getTrainNo(), Utils.toLocalDate(request.getStartDt()),
+                    Utils.toLocalDate(request.getEndDt()),
+                    request.getFrom(),request.getTo(), Utils.toLocalDate(request.getDoj()),
+                    request.getJourneyClass(), bookingStatus, Timestamp.from(Instant.now()),
+                    seatNumber));
+
+            int pnrNo = bkng.getPnr();
 
             pnrs.add(i,pnrNo);
 
@@ -204,7 +216,7 @@ public class BookingService {
 
             int seatNo = bookingToCancel.getSeatNo();
 
-            List<Booking> waitingList = bookingInfoTrackerService.getWaitingList(bookingToCancel.getTrainNo(),bookingToCancel.getJourneyClass(),
+            List<Booking> waitingList = getWaitingList(bookingToCancel.getTrainNo(),bookingToCancel.getJourneyClass(),
                     bookingToCancel.getStartDt(),bookingToCancel.getEndDt()).orElse(new ArrayList<>());
 
             waitingList = waitingList.stream().sorted((b1,b2)->Integer.compare(b1.getPnr(), b2.getPnr())).toList();
@@ -340,4 +352,71 @@ public class BookingService {
     }
 
 
+
+    //Added From BookingInfoTrackerService
+
+    public int trackBooking(Passenger psngr, BookingRequest request,
+                            BookingStatus BOOKING_STATUS,int seatNumber){
+
+        Booking bkng =  bookingRepo.save(new Booking(psngr.getName(), psngr.getAge(), psngr.getSex(),
+                request.getTrainNo(), Utils.toLocalDate(request.getStartDt()),
+                Utils.toLocalDate(request.getEndDt()),
+                request.getFrom(),request.getTo(), Utils.toLocalDate(request.getDoj()),
+                request.getJourneyClass(), BOOKING_STATUS, Timestamp.from(Instant.now()),
+                seatNumber));
+
+        return bkng.getPnr();
+    }
+
+    public int trackBooking(Booking booking){
+
+        booking = bookingRepo.save(booking);
+        return booking.getPnr();
+    }
+
+    public List<Booking> getBookingBySeatNumber(int seatNumber,BookingRequest request){
+
+        return bookingRepo.findBySeatNo(seatNumber,request.getTrainNo(),
+                request.getJourneyClass(),
+                Utils.toLocalDate(request.getStartDt()),
+                Utils.toLocalDate(request.getEndDt()));
+
+    }
+
+    public Optional<List<Booking>> getBookingBySeatNumber(int seatNumber,Booking booking){
+
+        return Optional.of(bookingRepo.findBySeatNo(seatNumber, booking.getTrainNo(),
+                booking.getJourneyClass(),
+                booking.getStartDt(),
+                booking.getEndDt()));
+
+    }
+
+    public void trackBookingOpen(int trainNo, BookingOpenRequest request){
+
+        bookingOpenRepo.save(new BookingOpen(trainNo,Utils.toLocalDate(request.getStartDt()),
+                        Utils.toLocalDate(request.getEndDt()),true,
+                        Timestamp.from(Instant.now())
+                )
+        );
+
+    }
+
+    public Optional<Booking> getBookingByPnrNo(int pnrNo){
+
+        return bookingRepo.findById(pnrNo);
+    }
+
+    public void deleteBookingByPnrNo(int pnrNo){
+
+        bookingRepo.deleteById(pnrNo);
+    }
+
+    public Optional<List<Booking>> getWaitingList(int trainNo,
+                                                  JourneyClass jrnyClass, LocalDate strtDt,
+                                                  LocalDate endDt){
+
+        return bookingRepo.findByBookingStatus(BookingStatus.WAITING,trainNo,jrnyClass,strtDt,endDt);
+
+    }
 }
