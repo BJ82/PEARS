@@ -54,8 +54,6 @@ class BookingServiceTest {
 
     @Mock private RouteInfoService routeInfoService;
 
-    @Mock private BookingInfoTrackerService bookingInfoTrackerService;
-
     @Mock private BookingService bookingService;
 
     @Mock private Booking booking;
@@ -89,7 +87,7 @@ class BookingServiceTest {
         mapper = new ModelMapper();
 
         bookingServiceUnderTest = new BookingServiceForTest(trainService,routeInfoService,
-                bookingInfoTrackerService,bookingService,bookingRepo,bookingOpenRepo,trainArrivalDateService,
+                bookingService,bookingRepo,bookingOpenRepo,trainArrivalDateService,
                 seatService,mapper);
 
 
@@ -334,11 +332,10 @@ class BookingServiceTest {
 
         int pnrNo = 1;
 
-        when(bookingInfoTrackerService.getBookingByPnrNo(pnrNo)).thenReturn(Optional.of(bookingToCancel));
+        when(bookingRepo.findById(pnrNo)).thenReturn(Optional.of(bookingToCancel));
 
-        doNothing().when(bookingInfoTrackerService)
-                .deleteBookingByPnrNo(pnrNo);
 
+        doNothing().when(bookingRepo).deleteById(pnrNo);
 
         String expected = "Deleted Booking For PnrNo:1";
 
@@ -385,32 +382,42 @@ class BookingServiceTest {
         }
 
         //then
-        when(bookingInfoTrackerService.getBookingByPnrNo(bookingToCancel.getPnr())).thenReturn(Optional.of(bookingToCancel));
+
+        when(bookingRepo.findById(bookingToCancel.getPnr())).thenReturn(Optional.of(bookingToCancel));
 
         when(bookingRepo.findByBookingStatus(BookingStatus.WAITING,bookingToCancel.getTrainNo(),
                 bookingToCancel.getJourneyClass(),bookingToCancel.getStartDt(),bookingToCancel.getEndDt())).
                 thenReturn(Optional.of(waitingList));
 
-        when(bookingInfoTrackerService.getBookingBySeatNumber(seatNo,bookingToCancel)).thenReturn(Optional.of(allBookings));
+        when(bookingRepo.findBySeatNo(seatNo,
+                                      bookingToCancel.getTrainNo(),
+                                      bookingToCancel.getJourneyClass(),
+                                      bookingToCancel.getStartDt(),
+                                      bookingToCancel.getEndDt()
+                                     )
+            ).thenReturn(allBookings);
+
 
         when(routeInfoService.isRouteCompatible(eq(booking2),any(List.class))).thenReturn(true);
 
         when(routeInfoService.isRouteCompatible(not(eq(booking2)),any(List.class))).thenReturn(false);
 
-        doNothing().when(bookingInfoTrackerService)
-                .changeBookingToConfirm(booking2.getPnr(),seatNo);
-
-        doNothing().when(bookingInfoTrackerService)
-                .deleteBookingByPnrNo(bookingToCancel.getPnr());
+        doNothing().when(bookingRepo)
+                .updateBooking(booking2.getPnr(),seatNo,BookingStatus.CONFIRMED);
+        doNothing().when(bookingRepo).deleteById(bookingToCancel.getPnr());
 
         //when
         bookingServiceUnderTest.cancelBooking(bookingToCancel.getPnr());
 
         //verify
         ArgumentCaptor<Integer> pnrArgumentCaptor = ArgumentCaptor.forClass(Integer.class);
-        verify(bookingInfoTrackerService).changeBookingToConfirm(pnrArgumentCaptor.capture(),eq(2));
+
+        ArgumentCaptor<BookingStatus> bkngStatusArgumentCaptor = ArgumentCaptor.forClass(BookingStatus.class);
+
+        verify(bookingRepo).updateBooking(pnrArgumentCaptor.capture(),eq(2),bkngStatusArgumentCaptor.capture());
 
         assertEquals(2,pnrArgumentCaptor.getValue());
+        assertEquals(BookingStatus.CONFIRMED,bkngStatusArgumentCaptor.getValue());
     }
 
     private List<Booking> createWaitingList(){

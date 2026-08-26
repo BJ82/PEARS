@@ -44,8 +44,6 @@ public class BookingService {
 
     private final RouteInfoService routeInfoService;
 
-    private final BookingInfoTrackerService bookingInfoTrackerService;
-
     private final BookingService bookingService;
 
     private final BookingRepository bookingRepo;
@@ -59,7 +57,6 @@ public class BookingService {
 
     public BookingService(TrainService trainService,
                           RouteInfoService routeInfoService,
-                          BookingInfoTrackerService bookingInfoTrackerService,
                           BookingService bookingService, BookingRepository bookingRepo, BookingOpenRepository bookingOpenRepo,
                           TrainArrivalDateService trainArrivalDateService,
                           SeatService seatService,
@@ -67,7 +64,6 @@ public class BookingService {
 
         this.trainService = trainService;
         this.routeInfoService = routeInfoService;
-        this.bookingInfoTrackerService = bookingInfoTrackerService;
         this.bookingService = bookingService;
         this.bookingRepo = bookingRepo;
         this.bookingOpenRepo = bookingOpenRepo;
@@ -207,7 +203,7 @@ public class BookingService {
 
     public String cancelBooking(int pnrNo) throws PnrNoIncorrectException{
 
-        Booking bookingToCancel = bookingInfoTrackerService.getBookingByPnrNo(pnrNo)
+        Booking bookingToCancel = getBookingByPnrNo(pnrNo)
                 .orElseThrow(()->new PnrNoIncorrectException("Check PNR No:"+pnrNo+",As booking Could Not Be Found"));
 
         logger.info("Processing Request To Cancel Booking For PnrNo:{}",pnrNo);
@@ -221,7 +217,7 @@ public class BookingService {
 
             waitingList = waitingList.stream().sorted((b1,b2)->Integer.compare(b1.getPnr(), b2.getPnr())).toList();
 
-            List<Booking> allBookings = bookingInfoTrackerService.getBookingBySeatNumber(seatNo,bookingToCancel).orElse(new ArrayList<>());
+            List<Booking> allBookings = Optional.of(getBookingBySeatNumber(seatNo,bookingToCancel)).orElse(new ArrayList<>());
 
             int pnrToRemove = bookingToCancel.getPnr(); //Exclude bookingToCancel since it will be deleted
 
@@ -240,13 +236,13 @@ public class BookingService {
 
             if(bookingToConfirm != null){
 
-                bookingInfoTrackerService.changeBookingToConfirm(bookingToConfirm.getPnr(),seatNo);
+                changeBookingToConfirm(bookingToConfirm.getPnr(),seatNo);
                 logger.info("Changed Booking Status For PnrNo:{},From Waiting To Confirmed",bookingToConfirm.getPnr());
             }
 
         }
 
-        bookingInfoTrackerService.deleteBookingByPnrNo(pnrNo);
+        deleteBookingByPnrNo(pnrNo);
 
         logger.info("Booking Cancelled For PnrNo:{}",pnrNo);
 
@@ -383,12 +379,12 @@ public class BookingService {
 
     }
 
-    public Optional<List<Booking>> getBookingBySeatNumber(int seatNumber,Booking booking){
+    public List<Booking> getBookingBySeatNumber(int seatNumber,Booking booking){
 
-        return Optional.of(bookingRepo.findBySeatNo(seatNumber, booking.getTrainNo(),
+        return bookingRepo.findBySeatNo(seatNumber, booking.getTrainNo(),
                 booking.getJourneyClass(),
                 booking.getStartDt(),
-                booking.getEndDt()));
+                booking.getEndDt());
 
     }
 
@@ -418,5 +414,10 @@ public class BookingService {
 
         return bookingRepo.findByBookingStatus(BookingStatus.WAITING,trainNo,jrnyClass,strtDt,endDt);
 
+    }
+
+    public void changeBookingToConfirm(int pnrNo,int seatNoToAllocate){
+
+        bookingRepo.updateBooking(pnrNo,seatNoToAllocate,BookingStatus.CONFIRMED);
     }
 }

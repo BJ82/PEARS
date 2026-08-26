@@ -29,7 +29,7 @@ public class SeatService {
 
     private final BookingRepository bookingRepo;
 
-    private final BookingInfoTrackerService bookingInfoTrackerService;
+    private final BookingService bookingService;
 
     private final RouteInfoService routeInfoService;
 
@@ -37,14 +37,14 @@ public class SeatService {
 
     private final int totalNoOfSeats;
 
-    public SeatService(SeatNoTrackerRepository seatNoTrackerRepo, SeatCountRepository seatCountRepo, BookingRepository bookingRepo, BookingInfoTrackerService bookingInfoTrackerService,
+    public SeatService(SeatNoTrackerRepository seatNoTrackerRepo, SeatCountRepository seatCountRepo, BookingRepository bookingRepo, BookingService bookingService,
                        RouteInfoService routeInfoService, TrainService trainService,
                        @Value("${total.no.of.seats}") int totalNoOfSeats) {
 
         this.seatNoTrackerRepo = seatNoTrackerRepo;
         this.seatCountRepo = seatCountRepo;
         this.bookingRepo = bookingRepo;
-        this.bookingInfoTrackerService = bookingInfoTrackerService;
+        this.bookingService = bookingService;
         this.routeInfoService = routeInfoService;
         this.trainService = trainService;
         this.totalNoOfSeats = totalNoOfSeats;
@@ -189,7 +189,7 @@ public class SeatService {
 
         for(Integer num:seatNums){
 
-            List<Booking> bookings = bookingInfoTrackerService.getBookingBySeatNumber(num,request);
+            List<Booking> bookings = bookingService.getBookingBySeatNumber(num,request);
 
             String src;
             String dest;
@@ -259,8 +259,5 @@ public class SeatService {
 
         return allStations;
     }
-
-
-
 
 }

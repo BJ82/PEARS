@@ -10,13 +10,12 @@ import org.modelmapper.ModelMapper;
 public class BookingServiceForTest extends BookingService {
 
     public BookingServiceForTest(TrainService trainService, RouteInfoService routeInfoService,
-                                 BookingInfoTrackerService bookingInfoTrackerService,
                                  BookingService bookingService, BookingRepository bookingRepo,BookingOpenRepository bookingOpenRepo,
                                  TrainArrivalDateService trainArrivalDateService,
                                  SeatService seatService,
                                  ModelMapper mapper) {
 
-        super(trainService,routeInfoService,bookingInfoTrackerService,
+        super(trainService,routeInfoService,
                 bookingService,bookingRepo,bookingOpenRepo,trainArrivalDateService, seatService,mapper);
 
     }

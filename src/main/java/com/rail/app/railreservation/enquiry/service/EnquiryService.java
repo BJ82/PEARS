@@ -2,7 +2,6 @@ package com.rail.app.railreservation.enquiry.service;
 
 import com.rail.app.railreservation.booking.dto.BookingRequest;
 import com.rail.app.railreservation.booking.entity.Booking;
-import com.rail.app.railreservation.booking.service.BookingInfoTrackerService;
 import com.rail.app.railreservation.booking.service.BookingService;
 import com.rail.app.railreservation.booking.service.SeatService;
 import com.rail.app.railreservation.enquiry.exception.PnrNoIncorrectException;
@@ -36,7 +35,6 @@ public class EnquiryService {
     private static final String INSIDE_ENQUIRY_SERVICE = "Inside EnquiryService Service...";
     private final RouteInfoService routeInfoService;
     private final TrainService trainService;
-    private final BookingInfoTrackerService bookingInfoTrackerService;
     private final BookingService bookingService;
     private final TrainArrivalDateService trainArrivalDateService;
 
@@ -44,12 +42,10 @@ public class EnquiryService {
     private final ModelMapper mapper;
 
     public EnquiryService(RouteInfoService routeInfoService, TrainService trainService,
-                          BookingInfoTrackerService bookingInfoTrackerService,
                           BookingService bookingService, TrainArrivalDateService trainArrivalDateService,
                           SeatService seatService, ModelMapper mapper) {
         this.routeInfoService = routeInfoService;
         this.trainService = trainService;
-        this.bookingInfoTrackerService = bookingInfoTrackerService;
         this.bookingService = bookingService;
         this.trainArrivalDateService = trainArrivalDateService;
         this.seatService = seatService;
@@ -190,7 +186,7 @@ public class EnquiryService {
     public PnrEnquiryResponse pnrEnquiry(int pnrNo) throws PnrNoIncorrectException {
 
         Booking booking;
-        booking = bookingInfoTrackerService.getBookingByPnrNo(pnrNo).
+        booking = bookingService.getBookingByPnrNo(pnrNo).
                   orElseThrow(() -> new PnrNoIncorrectException("Invalid Pnr No.Could not find booking corresponding to pnr no:"+pnrNo));
 
 
