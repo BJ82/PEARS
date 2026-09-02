@@ -22,6 +22,8 @@ public class SignUpController {
         this.signUpService = signUpService;
     }
 
+    //Ideally should be idempotent.
+    //Use put or patch
     @PreAuthorize("hasRole('ROLE_ADMIN')")
     @PostMapping("admin")
     public ResponseEntity<SignUpResponse> signUpAdmin(@RequestBody SignUpRequest signUpRequest){
@@ -32,6 +34,8 @@ public class SignUpController {
         return ResponseEntity.status(HttpStatus.CREATED).body(signUpResponse);
     }
 
+    //Ideally should be idempotent.
+    //Use put or patch
 
     @PostMapping("user")
     public ResponseEntity<SignUpResponse> signUpUser(@RequestBody SignUpRequest signUpRequest){

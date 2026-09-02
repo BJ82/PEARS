@@ -19,6 +19,8 @@ public class LoginController {
         this.loginService = loginService;
     }
 
+    //Ideally should be idempotent.
+    //Use put or patch
     @PostMapping("/login")
     public ResponseEntity<LoginResponse> login(@RequestBody LoginRequest loginRequest){
 

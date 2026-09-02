@@ -30,6 +30,8 @@ public class BookingController {
         this.bookingService = bookingService;
     }
 
+    //Ideally should be idempotent.
+    //Use put or patch
     @PostMapping("/bookings")
     public ResponseEntity<BookingResponse> bookTicket(@RequestBody BookingRequest bookingRequest) throws InvalidBookingException, BookingNotOpenException, TimeTableNotFoundException {
 
@@ -46,6 +48,8 @@ public class BookingController {
        return ResponseEntity.created(location).body(bookingResponse);
     }
 
+    //Ideally should be idempotent.
+    //Use put or patch
     @PreAuthorize("hasRole('ROLE_ADMIN')")
     @PostMapping("trains/{trainNo}/bookings/open")
     public ResponseEntity<BookingOpenResponse> openBooking(@PathVariable("trainNo") int trainNo,@RequestBody BookingOpenRequest bookingOpenRequest) throws BookingCannotOpenException {

@@ -50,6 +50,8 @@ public class EnquiryController {
         return ResponseEntity.ok().body(enquiryService.trainEnquiry(trnNo));
     }
 
+    //Ideally should be idempotent.
+    //Use put or patch
     @PostMapping("seats/trains/{trainNo}")
     public ResponseEntity<SeatEnquiryResponse> seatEnquiry(@PathVariable("trainNo")int trainNo,@RequestBody SeatEnquiryRequest seatEnquiryRequest) throws InvalidSeatEnquiryException, TimeTableNotFoundException {
 

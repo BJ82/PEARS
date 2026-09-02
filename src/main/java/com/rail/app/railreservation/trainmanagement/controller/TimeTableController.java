@@ -30,6 +30,8 @@ public class TimeTableController {
         this.timeTableService = timeTableService;
     }
 
+    //Ideally should be idempotent.
+    //Use put or patch
     @PreAuthorize("hasRole('ROLE_ADMIN')")
     @PostMapping
     public ResponseEntity<TimeTableAddResponse> add(@RequestBody TimeTableAddRequest tmtbladdreq) throws TimeTableWithoutTrainException, TimeTableAddFailException {

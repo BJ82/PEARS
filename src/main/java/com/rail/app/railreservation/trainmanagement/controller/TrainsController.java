@@ -30,6 +30,8 @@ public class TrainsController {
         this.ts = ts;
     }
 
+    //Ideally should be idempotent.
+    //Use put or patch
     @PreAuthorize("hasRole('ROLE_ADMIN')")
     @PostMapping
     public ResponseEntity<TrainAddResponse> add(@RequestBody TrainAddRequest trnAddReq) throws DuplicateTrainException {
