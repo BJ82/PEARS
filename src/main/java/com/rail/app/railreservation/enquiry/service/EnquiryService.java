@@ -9,7 +9,7 @@ import com.rail.app.railreservation.trainmanagement.service.TrainArrivalDateServ
 import com.rail.app.railreservation.trainmanagement.service.TrainService;
 import com.rail.app.railreservation.util.Utils;
 import com.rail.app.railreservation.trainmanagement.entity.Train;
-import com.rail.app.railreservation.route.service.RouteInfoService;
+import com.rail.app.railreservation.route.service.RouteService;
 import com.rail.app.railreservation.enquiry.dto.PnrEnquiryResponse;
 import com.rail.app.railreservation.enquiry.dto.SeatEnquiryRequest;
 import com.rail.app.railreservation.enquiry.dto.SeatEnquiryResponse;
@@ -33,7 +33,7 @@ public class EnquiryService {
 
     private static final Logger logger = LogManager.getLogger(EnquiryService.class);
     private static final String INSIDE_ENQUIRY_SERVICE = "Inside EnquiryService Service...";
-    private final RouteInfoService routeInfoService;
+    private final RouteService routeService;
     private final TrainService trainService;
     private final BookingService bookingService;
     private final TrainArrivalDateService trainArrivalDateService;
@@ -41,10 +41,10 @@ public class EnquiryService {
     private final SeatService seatService;
     private final ModelMapper mapper;
 
-    public EnquiryService(RouteInfoService routeInfoService, TrainService trainService,
+    public EnquiryService(RouteService routeService, TrainService trainService,
                           BookingService bookingService, TrainArrivalDateService trainArrivalDateService,
                           SeatService seatService, ModelMapper mapper) {
-        this.routeInfoService = routeInfoService;
+        this.routeService = routeService;
         this.trainService = trainService;
         this.bookingService = bookingService;
         this.trainArrivalDateService = trainArrivalDateService;
@@ -62,8 +62,8 @@ public class EnquiryService {
         // Step1: Obtain route ID for given source and destination
         Integer routeID = null;
 
-        if (routeInfoService.getBySrcAndDest(src,dest).isPresent())
-            routeID = routeInfoService.getBySrcAndDest(src,dest).get();
+        if (routeService.getBySrcAndDest(src,dest).isPresent())
+            routeID = routeService.getBySrcAndDest(src,dest).get();
 
         logger.info("Step1: Obtained routeID:{} for source:{} and destination:{}",routeID,src,dest);
 
@@ -116,7 +116,7 @@ public class EnquiryService {
 
         Integer routeID = trn.getRouteId();
 
-        Route route= routeInfoService.getByRouteId(routeID).orElseThrow(()->new RouteNotFoundException("Route Not Found For RouteID: "+routeID,routeID));
+        Route route= routeService.getByRouteId(routeID).orElseThrow(()->new RouteNotFoundException("Route Not Found For RouteID: "+routeID,routeID));
         List<String> stations = route.getStations();
 
         TrainEnquiryResponse trainEnquiryResponse = new ModelMapper().map(trn, TrainEnquiryResponse.class);
@@ -129,7 +129,7 @@ public class EnquiryService {
 
     private List<Integer> getParentRoutes(String src, String dest){
 
-        List<Route> routes = routeInfoService.containsSrcOrDest(src,dest);
+        List<Route> routes = routeService.containsSrcOrDest(src,dest);
 
         return routes.stream().filter(r->{   boolean isTrue = false;
             if(r.getStations().contains(src)){

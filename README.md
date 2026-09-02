@@ -82,7 +82,7 @@ Primarily the service is composed of following modules:
 
    for(Booking bookingWithStatusWait:waitingList){
 
-       if(allBookings.isEmpty() || routeInfoService.isRouteCompatible(bookingWithStatusWait,allBookings)){
+       if(allBookings.isEmpty() || routeService.isRouteCompatible(bookingWithStatusWait,allBookings)){
              bookingToConfirm = bookingWithStatusWait;
                  break;
        }

@@ -1,7 +1,7 @@
 package com.rail.app.railreservation.trainmanagement.service;
 
 import com.rail.app.railreservation.trainmanagement.entity.Train;
-import com.rail.app.railreservation.route.service.RouteInfoService;
+import com.rail.app.railreservation.route.service.RouteService;
 import com.rail.app.railreservation.route.entity.Route;
 import com.rail.app.railreservation.enquiry.exception.RouteNotFoundException;
 import com.rail.app.railreservation.enquiry.exception.TrainNotFoundException;
@@ -28,15 +28,15 @@ public class TrainService {
 
     private final TrainRepository trainRepo;
 
-    private final RouteInfoService routeInfoService;
+    private final RouteService routeService;
 
     private final ModelMapper mapper;
 
     private Integer ROUTE_ID = null;
 
-    public TrainService(TrainRepository trainRepo, RouteInfoService routeInfoService, ModelMapper mapper) {
+    public TrainService(TrainRepository trainRepo, RouteService routeService, ModelMapper mapper) {
 
-        this.routeInfoService = routeInfoService;
+        this.routeService = routeService;
         this.mapper = mapper;
         this.trainRepo = trainRepo;
     }
@@ -52,19 +52,19 @@ public class TrainService {
         logger.info("Adding train with name {}, running between {} and {}",trnReq.getTrainName(),src,dest);
 
         //Step1: Resolve src and dest to RouteID
-        if (routeInfoService.getBySrcAndDest(src,dest).isPresent()){
+        if (routeService.getBySrcAndDest(src,dest).isPresent()){
 
-            ROUTE_ID = routeInfoService.getBySrcAndDest(src,dest).get();
+            ROUTE_ID = routeService.getBySrcAndDest(src,dest).get();
             logger.info("Step1: Resolved src and dest to RouteID:{}",ROUTE_ID);
 
         }
 
         //Step2: If route for src and dest is not found then add new route
         if (ROUTE_ID == null) {
-            routeInfoService.addRoute(stations);
+            routeService.addRoute(stations);
 
-            if (routeInfoService.getBySrcAndDest(src,dest).isPresent())
-                ROUTE_ID = routeInfoService.getBySrcAndDest(src,dest).get();
+            if (routeService.getBySrcAndDest(src,dest).isPresent())
+                ROUTE_ID = routeService.getBySrcAndDest(src,dest).get();
 
             logger.info("ROUTE_ID:{}",ROUTE_ID);
             logger.info("Step2: Added new route for {} and {}",src,dest);
@@ -122,7 +122,7 @@ public class TrainService {
         for(Train trn:trns){
 
             trnInfo =  mapper.map(trn, TrainInfo.class);
-            route = routeInfoService.getByRouteId(trn.getRouteId()).orElseThrow(()->new RouteNotFoundException("Route Not Found For RouteID: "+trn.getRouteId(),trn.getRouteId()));
+            route = routeService.getByRouteId(trn.getRouteId()).orElseThrow(()->new RouteNotFoundException("Route Not Found For RouteID: "+trn.getRouteId(),trn.getRouteId()));
             trnInfo.getStns().addAll(route.getStations());
             allTrainResponse.getAllTrains().add(trnInfo);
         }

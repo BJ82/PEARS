@@ -12,7 +12,7 @@ import com.rail.app.railreservation.booking.repository.BookingRepository;
 import com.rail.app.railreservation.enquiry.exception.PnrNoIncorrectException;
 import com.rail.app.railreservation.enquiry.exception.TrainNotFoundException;
 import com.rail.app.railreservation.route.entity.Route;
-import com.rail.app.railreservation.route.service.RouteInfoService;
+import com.rail.app.railreservation.route.service.RouteService;
 import com.rail.app.railreservation.trainmanagement.entity.Train;
 import com.rail.app.railreservation.trainmanagement.enums.JourneyClass;
 import com.rail.app.railreservation.trainmanagement.exception.TimeTableNotFoundException;
@@ -42,7 +42,7 @@ public class BookingService {
 
     private final TrainService trainService;
 
-    private final RouteInfoService routeInfoService;
+    private final RouteService routeService;
 
     private final BookingService bookingService;
 
@@ -56,14 +56,14 @@ public class BookingService {
     private final ModelMapper mapper;
 
     public BookingService(TrainService trainService,
-                          RouteInfoService routeInfoService,
+                          RouteService routeService,
                           BookingService bookingService, BookingRepository bookingRepo, BookingOpenRepository bookingOpenRepo,
                           TrainArrivalDateService trainArrivalDateService,
                           SeatService seatService,
                           ModelMapper mapper) {
 
         this.trainService = trainService;
-        this.routeInfoService = routeInfoService;
+        this.routeService = routeService;
         this.bookingService = bookingService;
         this.bookingRepo = bookingRepo;
         this.bookingOpenRepo = bookingOpenRepo;
@@ -228,7 +228,7 @@ public class BookingService {
 
             for(Booking bookingWithStatusWait:waitingList){
 
-                if(allBookings.isEmpty() || routeInfoService.isRouteCompatible(bookingWithStatusWait,allBookings)){
+                if(allBookings.isEmpty() || routeService.isRouteCompatible(bookingWithStatusWait,allBookings)){
                     bookingToConfirm = bookingWithStatusWait;
                     break;
                 }
@@ -322,7 +322,7 @@ public class BookingService {
 
             boolean isRouteValid = false;
 
-            Optional<Route> routeOpt = routeInfoService.getByRouteId(trn.getRouteId());
+            Optional<Route> routeOpt = routeService.getByRouteId(trn.getRouteId());
 
             if(routeOpt.isPresent()){
 
@@ -330,7 +330,7 @@ public class BookingService {
 
                 List<String> stns = route.getStations();
 
-                if(routeInfoService.checkIfRouteContains(jurnyStartStn,jurnyEndStn,route)) {
+                if(routeService.checkIfRouteContains(jurnyStartStn,jurnyEndStn,route)) {
 
                     if(stns.indexOf(jurnyStartStn) < stns.indexOf(jurnyEndStn)) {
 

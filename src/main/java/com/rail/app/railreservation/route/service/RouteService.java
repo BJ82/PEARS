@@ -11,11 +11,11 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
-public class RouteInfoService {
+public class RouteService {
 
     private final RouteRepository routeRepo;
 
-    public RouteInfoService(RouteRepository routeRepo) {
+    public RouteService(RouteRepository routeRepo) {
         this.routeRepo = routeRepo;
     }
 

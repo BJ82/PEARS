@@ -11,7 +11,7 @@ import com.rail.app.railreservation.booking.repository.BookingOpenRepository;
 import com.rail.app.railreservation.booking.repository.BookingRepository;
 import com.rail.app.railreservation.enquiry.exception.PnrNoIncorrectException;
 import com.rail.app.railreservation.route.entity.Route;
-import com.rail.app.railreservation.route.service.RouteInfoService;
+import com.rail.app.railreservation.route.service.RouteService;
 import com.rail.app.railreservation.trainmanagement.entity.Train;
 import com.rail.app.railreservation.trainmanagement.enums.JourneyClass;
 import com.rail.app.railreservation.trainmanagement.exception.TimeTableNotFoundException;
@@ -41,7 +41,6 @@ import java.util.Set;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.AdditionalMatchers.not;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -52,7 +51,7 @@ class BookingServiceTest {
 
     @Mock private TrainService trainService;
 
-    @Mock private RouteInfoService routeInfoService;
+    @Mock private RouteService routeService;
 
     @Mock private BookingService bookingService;
 
@@ -86,7 +85,7 @@ class BookingServiceTest {
 
         mapper = new ModelMapper();
 
-        bookingServiceUnderTest = new BookingServiceForTest(trainService,routeInfoService,
+        bookingServiceUnderTest = new BookingServiceForTest(trainService, routeService,
                 bookingService,bookingRepo,bookingOpenRepo,trainArrivalDateService,
                 seatService,mapper);
 
@@ -147,9 +146,9 @@ class BookingServiceTest {
         //when
         when(trainService.getTrainByNo(1)).thenReturn(Optional.of(train));
 
-        when(routeInfoService.getByRouteId(1)).thenReturn(Optional.of(route));
+        when(routeService.getByRouteId(1)).thenReturn(Optional.of(route));
 
-        when(routeInfoService.checkIfRouteContains(bookingRequest.getFrom(),
+        when(routeService.checkIfRouteContains(bookingRequest.getFrom(),
                 bookingRequest.getTo(),route)).thenReturn(false);
 
         //then
@@ -165,9 +164,9 @@ class BookingServiceTest {
         //when
         when(trainService.getTrainByNo(1)).thenReturn(Optional.of(train));
 
-        when(routeInfoService.getByRouteId(1)).thenReturn(Optional.of(route));
+        when(routeService.getByRouteId(1)).thenReturn(Optional.of(route));
 
-        when(routeInfoService.checkIfRouteContains(bookingRequest.getFrom(),
+        when(routeService.checkIfRouteContains(bookingRequest.getFrom(),
                 bookingRequest.getTo(),route)).thenReturn(true);
 
         when(bookingService.isBookingOpen(bookingRequest)).thenReturn(Optional.empty());
@@ -184,9 +183,9 @@ class BookingServiceTest {
 
         when(trainService.getTrainByNo(1)).thenReturn(Optional.of(train));
 
-        when(routeInfoService.getByRouteId(1)).thenReturn(Optional.of(route));
+        when(routeService.getByRouteId(1)).thenReturn(Optional.of(route));
 
-        when(routeInfoService.checkIfRouteContains(bookingRequest.getFrom(),
+        when(routeService.checkIfRouteContains(bookingRequest.getFrom(),
                 bookingRequest.getTo(),route)).thenReturn(true);
 
         when(bookingService.isBookingOpen(bookingRequest)).thenReturn(Optional.of(true));
@@ -207,9 +206,9 @@ class BookingServiceTest {
 
         when(trainService.getTrainByNo(1)).thenReturn(Optional.of(train));
 
-        when(routeInfoService.getByRouteId(1)).thenReturn(Optional.of(route));
+        when(routeService.getByRouteId(1)).thenReturn(Optional.of(route));
 
-        when(routeInfoService.checkIfRouteContains(bookingRequest.getFrom(),
+        when(routeService.checkIfRouteContains(bookingRequest.getFrom(),
                 bookingRequest.getTo(),route)).thenReturn(true);
 
         when(bookingService.isBookingOpen(bookingRequest)).thenReturn(Optional.of(true));
@@ -268,9 +267,9 @@ class BookingServiceTest {
 
         when(trainService.getTrainByNo(1)).thenReturn(Optional.of(train));
 
-        when(routeInfoService.getByRouteId(1)).thenReturn(Optional.of(route));
+        when(routeService.getByRouteId(1)).thenReturn(Optional.of(route));
 
-        when(routeInfoService.checkIfRouteContains(bookingRequest.getFrom(),
+        when(routeService.checkIfRouteContains(bookingRequest.getFrom(),
                 bookingRequest.getTo(),route)).thenReturn(true);
 
         when(bookingService.isBookingOpen(bookingRequest)).thenReturn(Optional.of(true));
@@ -398,9 +397,9 @@ class BookingServiceTest {
             ).thenReturn(allBookings);
 
 
-        when(routeInfoService.isRouteCompatible(eq(booking2),any(List.class))).thenReturn(true);
+        when(routeService.isRouteCompatible(eq(booking2),any(List.class))).thenReturn(true);
 
-        when(routeInfoService.isRouteCompatible(not(eq(booking2)),any(List.class))).thenReturn(false);
+        when(routeService.isRouteCompatible(not(eq(booking2)),any(List.class))).thenReturn(false);
 
         doNothing().when(bookingRepo)
                 .updateBooking(booking2.getPnr(),seatNo,BookingStatus.CONFIRMED);

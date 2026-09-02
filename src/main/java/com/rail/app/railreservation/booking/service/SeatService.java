@@ -9,7 +9,7 @@ import com.rail.app.railreservation.booking.repository.BookingRepository;
 import com.rail.app.railreservation.booking.repository.SeatCountRepository;
 import com.rail.app.railreservation.booking.repository.SeatNoTrackerRepository;
 import com.rail.app.railreservation.route.entity.Route;
-import com.rail.app.railreservation.route.service.RouteInfoService;
+import com.rail.app.railreservation.route.service.RouteService;
 import com.rail.app.railreservation.trainmanagement.entity.Train;
 import com.rail.app.railreservation.trainmanagement.enums.JourneyClass;
 import com.rail.app.railreservation.trainmanagement.service.TrainService;
@@ -31,21 +31,21 @@ public class SeatService {
 
     private final BookingService bookingService;
 
-    private final RouteInfoService routeInfoService;
+    private final RouteService routeService;
 
     private final TrainService trainService;
 
     private final int totalNoOfSeats;
 
     public SeatService(SeatNoTrackerRepository seatNoTrackerRepo, SeatCountRepository seatCountRepo, BookingRepository bookingRepo, BookingService bookingService,
-                       RouteInfoService routeInfoService, TrainService trainService,
+                       RouteService routeService, TrainService trainService,
                        @Value("${total.no.of.seats}") int totalNoOfSeats) {
 
         this.seatNoTrackerRepo = seatNoTrackerRepo;
         this.seatCountRepo = seatCountRepo;
         this.bookingRepo = bookingRepo;
         this.bookingService = bookingService;
-        this.routeInfoService = routeInfoService;
+        this.routeService = routeService;
         this.trainService = trainService;
         this.totalNoOfSeats = totalNoOfSeats;
     }
@@ -200,8 +200,8 @@ public class SeatService {
 
                 src = bkng.getStartFrom();
                 dest = bkng.getEndAt();
-                routeID = routeInfoService.getBySrcAndDest(src,dest).get();
-                isOverlapp = routeInfoService.getOverlappingRoutes(request.getFrom(),
+                routeID = routeService.getBySrcAndDest(src,dest).get();
+                isOverlapp = routeService.getOverlappingRoutes(request.getFrom(),
                         request.getTo()).contains(routeID);
 
                 if(isOverlapp)
@@ -253,7 +253,7 @@ public class SeatService {
             Train train = trainOpt.get();
             int routeID = train.getRouteId();
 
-            Route r = routeInfoService.getByRouteId(routeID).get();
+            Route r = routeService.getByRouteId(routeID).get();
             allStations.addAll(r.getStations());
         }
 

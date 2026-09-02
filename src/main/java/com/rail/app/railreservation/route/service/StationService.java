@@ -11,13 +11,13 @@ import java.util.List;
 import java.util.Optional;
 
 @Service
-public class StationInfoService {
+public class StationService {
 
     private final TrainRepository trainRepo;
 
     private final RouteRepository routeRepo;
 
-    public StationInfoService(TrainRepository trainRepo, RouteRepository routeRepo) {
+    public StationService(TrainRepository trainRepo, RouteRepository routeRepo) {
         this.trainRepo = trainRepo;
         this.routeRepo = routeRepo;
     }
