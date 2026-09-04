@@ -146,7 +146,7 @@ class BookingServiceTest {
         //when
         when(trainService.getTrainByNo(1)).thenReturn(Optional.of(train));
 
-        when(routeService.getByRouteId(1)).thenReturn(Optional.of(route));
+        when(routeService.getRouteById(1)).thenReturn(Optional.of(route));
 
         when(routeService.checkIfRouteContains(bookingRequest.getFrom(),
                 bookingRequest.getTo(),route)).thenReturn(false);
@@ -164,7 +164,7 @@ class BookingServiceTest {
         //when
         when(trainService.getTrainByNo(1)).thenReturn(Optional.of(train));
 
-        when(routeService.getByRouteId(1)).thenReturn(Optional.of(route));
+        when(routeService.getRouteById(1)).thenReturn(Optional.of(route));
 
         when(routeService.checkIfRouteContains(bookingRequest.getFrom(),
                 bookingRequest.getTo(),route)).thenReturn(true);
@@ -183,7 +183,7 @@ class BookingServiceTest {
 
         when(trainService.getTrainByNo(1)).thenReturn(Optional.of(train));
 
-        when(routeService.getByRouteId(1)).thenReturn(Optional.of(route));
+        when(routeService.getRouteById(1)).thenReturn(Optional.of(route));
 
         when(routeService.checkIfRouteContains(bookingRequest.getFrom(),
                 bookingRequest.getTo(),route)).thenReturn(true);
@@ -206,7 +206,7 @@ class BookingServiceTest {
 
         when(trainService.getTrainByNo(1)).thenReturn(Optional.of(train));
 
-        when(routeService.getByRouteId(1)).thenReturn(Optional.of(route));
+        when(routeService.getRouteById(1)).thenReturn(Optional.of(route));
 
         when(routeService.checkIfRouteContains(bookingRequest.getFrom(),
                 bookingRequest.getTo(),route)).thenReturn(true);
@@ -267,7 +267,7 @@ class BookingServiceTest {
 
         when(trainService.getTrainByNo(1)).thenReturn(Optional.of(train));
 
-        when(routeService.getByRouteId(1)).thenReturn(Optional.of(route));
+        when(routeService.getRouteById(1)).thenReturn(Optional.of(route));
 
         when(routeService.checkIfRouteContains(bookingRequest.getFrom(),
                 bookingRequest.getTo(),route)).thenReturn(true);

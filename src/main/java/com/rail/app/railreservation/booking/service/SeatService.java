@@ -200,7 +200,7 @@ public class SeatService {
 
                 src = bkng.getStartFrom();
                 dest = bkng.getEndAt();
-                routeID = routeService.getBySrcAndDest(src,dest).get();
+                routeID = routeService.getRouteIdsBySrcAndDest(src,dest).get();
                 isOverlapp = routeService.getOverlappingRoutes(request.getFrom(),
                         request.getTo()).contains(routeID);
 
@@ -253,7 +253,7 @@ public class SeatService {
             Train train = trainOpt.get();
             int routeID = train.getRouteId();
 
-            Route r = routeService.getByRouteId(routeID).get();
+            Route r = routeService.getRouteById(routeID).get();
             allStations.addAll(r.getStations());
         }
 

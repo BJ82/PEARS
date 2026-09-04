@@ -62,8 +62,8 @@ public class EnquiryService {
         // Step1: Obtain route ID for given source and destination
         Integer routeID = null;
 
-        if (routeService.getBySrcAndDest(src,dest).isPresent())
-            routeID = routeService.getBySrcAndDest(src,dest).get();
+        routeID = routeService.getRouteIdsBySrcAndDest(src,dest).
+                orElseThrow(()->new TrainNotFoundException("No Train Found Between Stations "+src+" And "+dest,src,dest));
 
         logger.info("Step1: Obtained routeID:{} for source:{} and destination:{}",routeID,src,dest);
 
@@ -116,7 +116,7 @@ public class EnquiryService {
 
         Integer routeID = trn.getRouteId();
 
-        Route route= routeService.getByRouteId(routeID).orElseThrow(()->new RouteNotFoundException("Route Not Found For RouteID: "+routeID,routeID));
+        Route route= routeService.getRouteById(routeID).orElseThrow(()->new RouteNotFoundException("Route Not Found For RouteID: "+routeID,routeID));
         List<String> stations = route.getStations();
 
         TrainEnquiryResponse trainEnquiryResponse = new ModelMapper().map(trn, TrainEnquiryResponse.class);
@@ -129,7 +129,7 @@ public class EnquiryService {
 
     private List<Integer> getParentRoutes(String src, String dest){
 
-        List<Route> routes = routeService.containsSrcOrDest(src,dest);
+        List<Route> routes = routeService.getRoutesBySrcOrDest(src,dest);
 
         return routes.stream().filter(r->{   boolean isTrue = false;
             if(r.getStations().contains(src)){

@@ -19,17 +19,17 @@ public class RouteService {
         this.routeRepo = routeRepo;
     }
 
-    public Optional<Route> getByRouteId(int routeId){
+    public Optional<Route> getRouteById(int routeId){
 
         return routeRepo.findByRouteID(routeId);
     }
 
-    public List<Route> containsSrcOrDest(String src,String dest){
+    public List<Route> getRoutesBySrcOrDest(String src, String dest){
 
         return routeRepo.findBySrcAndDestn(src,dest);
     }
 
-    public Optional<Integer> getBySrcAndDest(String src, String dest){
+    public Optional<Integer> getRouteIdsBySrcAndDest(String src, String dest){
 
         List<Route> routes = routeRepo.findBySrcAndDestn(src, dest);
 
@@ -76,7 +76,7 @@ public class RouteService {
         for (Booking b : bookings) {
 
             isCompatible = false;
-            stations = resolveRoute(b).getStations();
+            stations = getRoute(b.getStartFrom(),b.getEndAt()).getStations();
             allStations = String.join("", stations);
             if (allStations.indexOf(startFrom) == -1
                     || allStations.indexOf(startFrom) == allStations.indexOf(stations.getLast())) {
@@ -95,11 +95,11 @@ public class RouteService {
         return isCompatible;
     }
 
-    private Route resolveRoute(Booking booking){
+    private Route getRoute(String startFrom,String endAt){
 
-        int routeId = getBySrcAndDest(booking.getStartFrom(),booking.getEndAt()).get();
+        int routeId = getRouteIdsBySrcAndDest(startFrom,endAt).get();
 
-        return getByRouteId(routeId).get();
+        return getRouteById(routeId).get();
     }
 
     public boolean checkIfRouteContains(String stn1,String stn2,Route routeToCheck){
@@ -112,7 +112,7 @@ public class RouteService {
 
     public List<Integer> getOverlappingRoutes(String src, String dest){
 
-        List<Route> routes = containsSrcOrDest(src,dest);
+        List<Route> routes = getRoutesBySrcOrDest(src,dest);
 
         List<Route> overlappingRoutes = new ArrayList<>(routes);
 

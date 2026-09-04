@@ -52,9 +52,9 @@ public class TrainService {
         logger.info("Adding train with name {}, running between {} and {}",trnReq.getTrainName(),src,dest);
 
         //Step1: Resolve src and dest to RouteID
-        if (routeService.getBySrcAndDest(src,dest).isPresent()){
+        if (routeService.getRouteIdsBySrcAndDest(src,dest).isPresent()){
 
-            ROUTE_ID = routeService.getBySrcAndDest(src,dest).get();
+            ROUTE_ID = routeService.getRouteIdsBySrcAndDest(src,dest).get();
             logger.info("Step1: Resolved src and dest to RouteID:{}",ROUTE_ID);
 
         }
@@ -63,8 +63,8 @@ public class TrainService {
         if (ROUTE_ID == null) {
             routeService.addRoute(stations);
 
-            if (routeService.getBySrcAndDest(src,dest).isPresent())
-                ROUTE_ID = routeService.getBySrcAndDest(src,dest).get();
+            if (routeService.getRouteIdsBySrcAndDest(src,dest).isPresent())
+                ROUTE_ID = routeService.getRouteIdsBySrcAndDest(src,dest).get();
 
             logger.info("ROUTE_ID:{}",ROUTE_ID);
             logger.info("Step2: Added new route for {} and {}",src,dest);
@@ -122,7 +122,7 @@ public class TrainService {
         for(Train trn:trns){
 
             trnInfo =  mapper.map(trn, TrainInfo.class);
-            route = routeService.getByRouteId(trn.getRouteId()).orElseThrow(()->new RouteNotFoundException("Route Not Found For RouteID: "+trn.getRouteId(),trn.getRouteId()));
+            route = routeService.getRouteById(trn.getRouteId()).orElseThrow(()->new RouteNotFoundException("Route Not Found For RouteID: "+trn.getRouteId(),trn.getRouteId()));
             trnInfo.getStns().addAll(route.getStations());
             allTrainResponse.getAllTrains().add(trnInfo);
         }

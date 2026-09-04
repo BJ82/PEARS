@@ -215,7 +215,8 @@ public class BookingService {
             List<Booking> waitingList = getWaitingList(bookingToCancel.getTrainNo(),bookingToCancel.getJourneyClass(),
                     bookingToCancel.getStartDt(),bookingToCancel.getEndDt()).orElse(new ArrayList<>());
 
-            waitingList = waitingList.stream().sorted((b1,b2)->Integer.compare(b1.getPnr(), b2.getPnr())).toList();
+            waitingList = waitingList.stream().
+                    sorted((b1,b2)->Integer.compare(b1.getPnr(), b2.getPnr())).toList();
 
             List<Booking> allBookings = Optional.of(getBookingBySeatNumber(seatNo,bookingToCancel)).orElse(new ArrayList<>());
 
@@ -322,7 +323,7 @@ public class BookingService {
 
             boolean isRouteValid = false;
 
-            Optional<Route> routeOpt = routeService.getByRouteId(trn.getRouteId());
+            Optional<Route> routeOpt = routeService.getRouteById(trn.getRouteId());
 
             if(routeOpt.isPresent()){
 
