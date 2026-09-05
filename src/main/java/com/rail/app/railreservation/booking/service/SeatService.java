@@ -132,11 +132,7 @@ public class SeatService {
 
     }
 
-
-
-
-
-    public void initialize(int trainNo, BookingOpenRequest request){
+    public void initSeatNoTracker(int trainNo, BookingOpenRequest request){
 
         for(JourneyClass jrnyClass:JourneyClass.values()){
 
@@ -145,7 +141,11 @@ public class SeatService {
                             Utils.toLocalDate(request.getEndDt()),0
                     )
             );
+        }
+    }
+    public void initSeatCount(int trainNo, BookingOpenRequest request){
 
+        for(JourneyClass jrnyClass:JourneyClass.values()){
 
             seatCountRepo.save(new SeatCount(trainNo,
                             Utils.toLocalDate(request.getStartDt()),
@@ -153,7 +153,6 @@ public class SeatService {
                     )
             );
         }
-
     }
     private Set<Integer> getSeatNosBefore(BookingRequest request){
 

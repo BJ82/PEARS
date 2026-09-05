@@ -458,7 +458,10 @@ class BookingServiceTest {
                 .addBookingOpenInfo(trainNo,bookingOpenRequest);
 
         doNothing().when(seatService)
-                        .initialize(trainNo,bookingOpenRequest);
+                        .initSeatNoTracker(trainNo,bookingOpenRequest);
+
+        doNothing().when(seatService)
+                .initSeatCount(trainNo,bookingOpenRequest);
 
         //when
         BookingOpenResponse bookingOpenResponse = bookingServiceUnderTest.openBooking(trainNo,bookingOpenRequest);
@@ -470,9 +473,11 @@ class BookingServiceTest {
         verify(bookingService).addBookingOpenInfo(trainNoCaptor.capture(),eq(bookingOpenRequest));
         assertEquals(trainNo,trainNoCaptor.getValue());
 
-        verify(seatService).initialize(trainNoCaptor.capture(),eq(bookingOpenRequest));
+        verify(seatService).initSeatNoTracker(trainNoCaptor.capture(),eq(bookingOpenRequest));
         assertEquals(trainNo,trainNoCaptor.getValue());
 
+        verify(seatService).initSeatCount(trainNoCaptor.capture(),eq(bookingOpenRequest));
+        assertEquals(trainNo,trainNoCaptor.getValue());
 
         //Verify BookingOpenRequest
         ArgumentCaptor<BookingOpenRequest> bookingOpenRequestCaptor = ArgumentCaptor.forClass(BookingOpenRequest.class);
@@ -480,7 +485,10 @@ class BookingServiceTest {
         verify(bookingService).addBookingOpenInfo(eq(trainNo),bookingOpenRequestCaptor.capture());
         assertEquals(bookingOpenRequest,bookingOpenRequestCaptor.getValue());
 
-        verify(seatService).initialize(eq(trainNo),bookingOpenRequestCaptor.capture());
+        verify(seatService).initSeatNoTracker(eq(trainNo),bookingOpenRequestCaptor.capture());
+        assertEquals(bookingOpenRequest,bookingOpenRequestCaptor.getValue());
+
+        verify(seatService).initSeatCount(eq(trainNo),bookingOpenRequestCaptor.capture());
         assertEquals(bookingOpenRequest,bookingOpenRequestCaptor.getValue());
 
 

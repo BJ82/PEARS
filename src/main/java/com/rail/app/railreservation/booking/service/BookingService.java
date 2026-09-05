@@ -237,7 +237,7 @@ public class BookingService {
 
             if(bookingToConfirm != null){
 
-                changeBookingToConfirm(bookingToConfirm.getPnr(),seatNo);
+                confirmBooking(bookingToConfirm.getPnr(),seatNo);
                 logger.info("Changed Booking Status For PnrNo:{},From Waiting To Confirmed",bookingToConfirm.getPnr());
             }
 
@@ -269,7 +269,9 @@ public class BookingService {
 
         bookingService.addBookingOpenInfo(trainNo,request);
 
-        seatService.initialize(trainNo,request);
+        seatService.initSeatNoTracker(trainNo,request);
+
+        seatService.initSeatCount(trainNo,request);
 
         logger.info("Booking Opened For TrainNo:{}, StartDate:{}, EndDate:{}",
                 trainNo,request.getStartDt(),request.getEndDt());
@@ -348,29 +350,6 @@ public class BookingService {
         return Optional.of(isRouteValid);
     }
 
-
-
-    //Added From BookingInfoTrackerService
-
-    public int trackBooking(Passenger psngr, BookingRequest request,
-                            BookingStatus BOOKING_STATUS,int seatNumber){
-
-        Booking bkng =  bookingRepo.save(new Booking(psngr.getName(), psngr.getAge(), psngr.getSex(),
-                request.getTrainNo(), Utils.toLocalDate(request.getStartDt()),
-                Utils.toLocalDate(request.getEndDt()),
-                request.getFrom(),request.getTo(), Utils.toLocalDate(request.getDoj()),
-                request.getJourneyClass(), BOOKING_STATUS, Timestamp.from(Instant.now()),
-                seatNumber));
-
-        return bkng.getPnr();
-    }
-
-    public int trackBooking(Booking booking){
-
-        booking = bookingRepo.save(booking);
-        return booking.getPnr();
-    }
-
     public List<Booking> getBookingBySeatNumber(int seatNumber,BookingRequest request){
 
         return bookingRepo.findBySeatNo(seatNumber,request.getTrainNo(),
@@ -417,7 +396,7 @@ public class BookingService {
 
     }
 
-    public void changeBookingToConfirm(int pnrNo,int seatNoToAllocate){
+    public void confirmBooking(int pnrNo,int seatNoToAllocate){
 
         bookingRepo.updateBooking(pnrNo,seatNoToAllocate,BookingStatus.CONFIRMED);
     }
