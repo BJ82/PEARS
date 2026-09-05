@@ -29,22 +29,20 @@ public class SeatService {
 
     private final BookingRepository bookingRepo;
 
-    private final BookingService bookingService;
-
     private final RouteService routeService;
 
     private final TrainService trainService;
 
     private final int totalNoOfSeats;
 
-    public SeatService(SeatNoTrackerRepository seatNoTrackerRepo, SeatCountRepository seatCountRepo, BookingRepository bookingRepo, BookingService bookingService,
+    public SeatService(SeatNoTrackerRepository seatNoTrackerRepo,
+                       SeatCountRepository seatCountRepo, BookingRepository bookingRepo,
                        RouteService routeService, TrainService trainService,
                        @Value("${total.no.of.seats}") int totalNoOfSeats) {
 
         this.seatNoTrackerRepo = seatNoTrackerRepo;
         this.seatCountRepo = seatCountRepo;
         this.bookingRepo = bookingRepo;
-        this.bookingService = bookingService;
         this.routeService = routeService;
         this.trainService = trainService;
         this.totalNoOfSeats = totalNoOfSeats;
@@ -188,7 +186,10 @@ public class SeatService {
 
         for(Integer num:seatNums){
 
-            List<Booking> bookings = bookingService.getBookingBySeatNumber(num,request);
+            List<Booking> bookings =  bookingRepo.findBySeatNo(num,request.getTrainNo(),
+                                                request.getJourneyClass(),
+                                                Utils.toLocalDate(request.getStartDt()),
+                                                Utils.toLocalDate(request.getEndDt()));
 
             String src;
             String dest;
@@ -212,6 +213,15 @@ public class SeatService {
 
         seatNums.clear();
         seatNums.addAll(seatNosToRetain);
+    }
+
+    private List<Booking> getBookingBySeatNumber(int seatNumber,BookingRequest request){
+
+        return bookingRepo.findBySeatNo(seatNumber,request.getTrainNo(),
+                request.getJourneyClass(),
+                Utils.toLocalDate(request.getStartDt()),
+                Utils.toLocalDate(request.getEndDt()));
+
     }
 
     private Set<Integer> getSeatNosAfter(BookingRequest request){
