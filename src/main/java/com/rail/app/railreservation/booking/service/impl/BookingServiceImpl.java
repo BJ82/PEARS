@@ -1,4 +1,4 @@
-package com.rail.app.railreservation.booking.service;
+package com.rail.app.railreservation.booking.service.impl;
 
 import com.rail.app.railreservation.booking.dto.*;
 import com.rail.app.railreservation.booking.entity.Booking;
@@ -9,6 +9,8 @@ import com.rail.app.railreservation.booking.exception.BookingNotOpenException;
 import com.rail.app.railreservation.booking.exception.InvalidBookingException;
 import com.rail.app.railreservation.booking.repository.BookingOpenRepository;
 import com.rail.app.railreservation.booking.repository.BookingRepository;
+import com.rail.app.railreservation.booking.service.BookingService;
+import com.rail.app.railreservation.booking.service.SeatService;
 import com.rail.app.railreservation.enquiry.exception.PnrNoIncorrectException;
 import com.rail.app.railreservation.enquiry.exception.TrainNotFoundException;
 import com.rail.app.railreservation.route.entity.Route;

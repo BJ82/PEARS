@@ -1,4 +1,4 @@
-package com.rail.app.railreservation.booking.service;
+package com.rail.app.railreservation.booking.service.impl;
 
 import com.rail.app.railreservation.booking.dto.BookingOpenRequest;
 import com.rail.app.railreservation.booking.dto.BookingRequest;
@@ -8,6 +8,7 @@ import com.rail.app.railreservation.booking.entity.SeatNoTracker;
 import com.rail.app.railreservation.booking.repository.BookingRepository;
 import com.rail.app.railreservation.booking.repository.SeatCountRepository;
 import com.rail.app.railreservation.booking.repository.SeatNoTrackerRepository;
+import com.rail.app.railreservation.booking.service.SeatService;
 import com.rail.app.railreservation.route.entity.Route;
 import com.rail.app.railreservation.route.service.RouteService;
 import com.rail.app.railreservation.trainmanagement.entity.Train;
