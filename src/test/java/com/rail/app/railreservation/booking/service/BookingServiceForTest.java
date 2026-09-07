@@ -7,16 +7,17 @@ import com.rail.app.railreservation.trainmanagement.service.TrainArrivalDateServ
 import com.rail.app.railreservation.trainmanagement.service.TrainService;
 import org.modelmapper.ModelMapper;
 
-public class BookingServiceForTest extends BookingService {
+public class BookingServiceForTest extends BookingServiceImpl {
 
     public BookingServiceForTest(TrainService trainService, RouteService routeService,
-                                 BookingService bookingService, BookingRepository bookingRepo,BookingOpenRepository bookingOpenRepo,
+                                 BookingRepository bookingRepo,
+                                 BookingOpenRepository bookingOpenRepo,
                                  TrainArrivalDateService trainArrivalDateService,
                                  SeatService seatService,
                                  ModelMapper mapper) {
 
         super(trainService, routeService,
-                bookingService,bookingRepo,bookingOpenRepo,trainArrivalDateService, seatService,mapper);
+                bookingRepo,bookingOpenRepo,trainArrivalDateService, seatService,mapper);
 
     }
 }
