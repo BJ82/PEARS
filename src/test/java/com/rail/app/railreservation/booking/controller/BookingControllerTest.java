@@ -4,13 +4,11 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.rail.app.railreservation.booking.dto.*;
 import com.rail.app.railreservation.booking.enums.BookingStatus;
 import com.rail.app.railreservation.booking.service.BookingService;
-import com.rail.app.railreservation.enquiry.exception.PnrNoIncorrectException;
 import com.rail.app.railreservation.security.config.SecurityConfig;
-import com.rail.app.railreservation.security.service.UserService;
+import com.rail.app.railreservation.security.service.UserDetailsServiceImpl;
 import com.rail.app.railreservation.security.util.JwtUtil;
 import com.rail.app.railreservation.trainmanagement.enums.JourneyClass;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -43,7 +41,7 @@ class BookingControllerTest {
     private BookingService bookingService;
 
     @MockitoBean
-    private UserService userService;
+    private UserDetailsServiceImpl userService;
 
     @MockitoBean
     private JwtUtil jwtUtil;

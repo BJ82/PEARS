@@ -1,6 +1,6 @@
 package com.rail.app.railreservation.security.filter;
 
-import com.rail.app.railreservation.security.service.UserService;
+import com.rail.app.railreservation.security.service.UserDetailsServiceImpl;
 import com.rail.app.railreservation.security.util.JwtUtil;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -18,10 +18,10 @@ import java.io.IOException;
 @Component
 public class JwtValidationFilter extends OncePerRequestFilter {
 
-    private final UserService userService;
+    private final UserDetailsServiceImpl userService;
     private JwtUtil jwtUtil;
 
-    public JwtValidationFilter(UserService userService, JwtUtil jwtUtil) {
+    public JwtValidationFilter(UserDetailsServiceImpl userService, JwtUtil jwtUtil) {
         this.userService = userService;
         this.jwtUtil = jwtUtil;
     }

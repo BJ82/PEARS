@@ -1,9 +1,8 @@
 package com.rail.app.railreservation.security.util;
 
-import com.rail.app.railreservation.security.service.UserService;
+import com.rail.app.railreservation.security.service.UserDetailsServiceImpl;
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.security.Keys;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
@@ -20,11 +19,11 @@ public class JwtUtil {
 
     private final long EXPIRATION_TIME;
 
-    private final UserService userService;
+    private final UserDetailsServiceImpl userService;
 
     public JwtUtil(@Value("${jwt.secret.key}") String SECRET,
                    @Value("${jwt.expiry.time}") String EXPIRATION_TIME,
-                   UserService userService) {
+                   UserDetailsServiceImpl userService) {
 
         this.userService = userService;
         this.SECRET = SECRET;

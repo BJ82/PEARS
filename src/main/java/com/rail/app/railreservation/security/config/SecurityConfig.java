@@ -1,7 +1,7 @@
 package com.rail.app.railreservation.security.config;
 
 import com.rail.app.railreservation.security.filter.JwtValidationFilter;
-import com.rail.app.railreservation.security.service.UserService;
+import com.rail.app.railreservation.security.service.UserDetailsServiceImpl;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -44,7 +44,7 @@ public class SecurityConfig {
     }
 
     @Bean
-    public AuthenticationManager authenticationManager(UserService userService,
+    public AuthenticationManager authenticationManager(UserDetailsServiceImpl userService,
                                                        PasswordEncoder passwordEncoder){
 
         DaoAuthenticationProvider daoAuthenticationProvider = new DaoAuthenticationProvider();
