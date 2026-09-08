@@ -293,7 +293,7 @@ public class BookingServiceImpl implements BookingService {
         return new BookingOpenInfo(trainNo,bookingOpenDates);
     }
 
-    public void addBookingOpenInfo(int trainNo, BookingOpenRequest request){
+    private void addBookingOpenInfo(int trainNo, BookingOpenRequest request){
 
         bookingOpenRepo.save(new BookingOpen(trainNo, Utils.toLocalDate(request.getStartDt()),
                         Utils.toLocalDate(request.getEndDt()),true,

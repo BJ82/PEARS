@@ -26,8 +26,6 @@ public interface BookingService {
 
     public BookingOpenInfo getBookingOpenInfo(int trainNo);
 
-    public void addBookingOpenInfo(int trainNo, BookingOpenRequest request);
-
     public Optional<Boolean> isBookingOpen(BookingRequest request);
 
     public List<BookingOpen> getBookingOpenInfoByTrainNo(int trainNo);

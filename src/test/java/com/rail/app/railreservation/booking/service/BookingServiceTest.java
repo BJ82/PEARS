@@ -541,33 +541,7 @@ class BookingServiceTest {
     @Test
     void testGetBookingOpenInfo() {
     }
-
-    @Test
-    void testAddBookingOpenInfo() {
-
-        //given
-        BookingOpenRequest bookingOpenRequest =
-                new BookingOpenRequest(startDate.format(pattern),endDate.format(pattern));
-
-        BookingOpen bookingOpenExpected = new BookingOpen(1, Utils.toLocalDate(bookingOpenRequest.getStartDt()),
-                Utils.toLocalDate(bookingOpenRequest.getEndDt()),true,
-                Timestamp.from(Instant.now()));
-
-        //when
-        when(bookingOpenRepo.save(any(BookingOpen.class))).thenReturn(any(BookingOpen.class));
-
-        bookingServiceUnderTest.addBookingOpenInfo(1,bookingOpenRequest);
-
-        //then
-        ArgumentCaptor<BookingOpen> bookingOpenArgumentCaptor = ArgumentCaptor.forClass(BookingOpen.class);
-
-        verify(bookingOpenRepo).save(bookingOpenArgumentCaptor.capture());
-
-        BookingOpen bookingOpenActual = bookingOpenArgumentCaptor.getValue();
-        assertTrue(bookingOpenExpected.equals(bookingOpenActual));
-    }
-
-    @Test
+        @Test
     void testWhenBookingIsOpen() {
 
         //given

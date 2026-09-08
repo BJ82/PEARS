@@ -109,7 +109,7 @@ class BookingControllerTest {
 
         when(bookingService.book(bookingRequest)).thenReturn(bookingResponse);
 
-        mockMvc.perform(post("/api/v1/bookings")
+        mockMvc.perform(post("/api/v1/booking")
                         .header(HttpHeaders.AUTHORIZATION,"Bearer "+jwt)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(new ObjectMapper().writeValueAsString(bookingRequest))
