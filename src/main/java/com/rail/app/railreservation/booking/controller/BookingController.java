@@ -32,7 +32,7 @@ public class BookingController {
 
     //Ideally should be idempotent.
     //Use put or patch
-    @PostMapping("/bookings")
+    @PostMapping("/booking")
     public ResponseEntity<BookingResponse> bookTicket(@RequestBody BookingRequest bookingRequest) throws InvalidBookingException, BookingNotOpenException, TimeTableNotFoundException {
 
         logger.info(INSIDE_BOOKING_CONTROLLER);

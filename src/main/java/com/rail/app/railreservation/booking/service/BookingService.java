@@ -7,7 +7,6 @@ import com.rail.app.railreservation.booking.exception.BookingCannotOpenException
 import com.rail.app.railreservation.booking.exception.BookingNotOpenException;
 import com.rail.app.railreservation.booking.exception.InvalidBookingException;
 import com.rail.app.railreservation.enquiry.exception.PnrNoIncorrectException;
-import com.rail.app.railreservation.trainmanagement.entity.Train;
 import com.rail.app.railreservation.trainmanagement.enums.JourneyClass;
 import com.rail.app.railreservation.trainmanagement.exception.TimeTableNotFoundException;
 
@@ -39,12 +38,8 @@ public interface BookingService {
 
     public Optional<Booking> getBookingByPnrNo(int pnrNo);
 
-    public void deleteBookingByPnrNo(int pnrNo);
-
     public Optional<List<Booking>> getWaitingList(int trainNo,
                                                   JourneyClass jrnyClass, LocalDate strtDt,
                                                   LocalDate endDt);
-
-    public void confirmBooking(int pnrNo,int seatNoToAllocate);
 }
 

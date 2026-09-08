@@ -236,13 +236,13 @@ public class BookingServiceImpl implements BookingService {
 
             if(bookingToConfirm != null){
 
-                confirmBooking(bookingToConfirm.getPnr(),seatNo);
+                bookingRepo.updateBooking(bookingToConfirm.getPnr(),seatNo,BookingStatus.CONFIRMED);
                 logger.info("Changed Booking Status For PnrNo:{},From Waiting To Confirmed",bookingToConfirm.getPnr());
             }
 
         }
 
-        deleteBookingByPnrNo(pnrNo);
+        deleteByPnrNo(pnrNo);
 
         logger.info("Booking Cancelled For PnrNo:{}",pnrNo);
 
@@ -373,7 +373,7 @@ public class BookingServiceImpl implements BookingService {
         return bookingRepo.findById(pnrNo);
     }
 
-    public void deleteBookingByPnrNo(int pnrNo){
+    private void deleteByPnrNo(int pnrNo){
 
         bookingRepo.deleteById(pnrNo);
     }
@@ -386,8 +386,4 @@ public class BookingServiceImpl implements BookingService {
 
     }
 
-    public void confirmBooking(int pnrNo,int seatNoToAllocate){
-
-        bookingRepo.updateBooking(pnrNo,seatNoToAllocate,BookingStatus.CONFIRMED);
-    }
 }
