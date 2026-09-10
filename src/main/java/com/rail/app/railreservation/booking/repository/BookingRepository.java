@@ -73,6 +73,22 @@ public interface BookingRepository extends JpaRepository<Booking,Integer> {
                   @Param("endDt") LocalDate endDt,
                   @Param("seatNo") int seatNo);
 
+
+
+    @Query("SELECT COUNT(*) FROM Booking b " +
+            "WHERE b.trainNo = :trainNo " +
+            "AND b.journeyClass = :jrnyClass " +
+            "AND b.startDt = :strtDt " +
+            "AND b.endDt = :endDt " +
+            "AND b.bookingType = :bookingType " +
+            "AND b.bookingStatus = :bookingStatus")
+    int findCountOfSeatByTypeAndStatus(@Param("trainNo") int trainNo,
+                                       @Param("jrnyClass") JourneyClass jrnyClass,
+                                       @Param("strtDt") LocalDate strtDt,
+                                       @Param("endDt") LocalDate endDt,
+                                       @Param("bookingType") String bookingType,
+                                       @Param("bookingStatus") BookingStatus bookingStatus);
+
     @Query("SELECT b FROM Booking b " +
             "WHERE b.seatNo = :seatNo " +
             "AND b.trainNo = :trainNo " +

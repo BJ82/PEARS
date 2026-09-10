@@ -5,10 +5,12 @@ import com.rail.app.railreservation.booking.dto.BookingRequest;
 import com.rail.app.railreservation.booking.entity.Booking;
 import com.rail.app.railreservation.booking.entity.SeatCount;
 import com.rail.app.railreservation.booking.entity.SeatNoTracker;
+import com.rail.app.railreservation.booking.enums.BookingStatus;
 import com.rail.app.railreservation.booking.repository.BookingRepository;
 import com.rail.app.railreservation.booking.repository.SeatCountRepository;
 import com.rail.app.railreservation.booking.repository.SeatNoTrackerRepository;
 import com.rail.app.railreservation.booking.service.SeatService;
+import com.rail.app.railreservation.booking.service.TotalSeatsByType;
 import com.rail.app.railreservation.route.entity.Route;
 import com.rail.app.railreservation.route.service.RouteService;
 import com.rail.app.railreservation.trainmanagement.entity.Train;
@@ -36,10 +38,12 @@ public class SeatServiceImpl implements SeatService {
 
     private final int totalNoOfSeats;
 
+    private final TotalSeatsByType totalSeatsByType;
+
     public SeatServiceImpl(SeatNoTrackerRepository seatNoTrackerRepo,
-                       SeatCountRepository seatCountRepo, BookingRepository bookingRepo,
-                       RouteService routeService, TrainService trainService,
-                       @Value("${total.no.of.seats}") int totalNoOfSeats) {
+                           SeatCountRepository seatCountRepo, BookingRepository bookingRepo,
+                           RouteService routeService, TrainService trainService,
+                           @Value("${total.no.of.seats}") int totalNoOfSeats, TotalSeatsByType totalSeatsByType) {
 
         this.seatNoTrackerRepo = seatNoTrackerRepo;
         this.seatCountRepo = seatCountRepo;
@@ -47,6 +51,7 @@ public class SeatServiceImpl implements SeatService {
         this.routeService = routeService;
         this.trainService = trainService;
         this.totalNoOfSeats = totalNoOfSeats;
+        this.totalSeatsByType = totalSeatsByType;
     }
 
 
@@ -60,7 +65,11 @@ public class SeatServiceImpl implements SeatService {
         lstAllotedSeatNum = new AtomicInteger(getLastAllocatedSeatNo(request));
 
 
-        int seatsAvailable = totalNoOfSeats - getLastAllocatedSeatNo(request);
+        int seatsAvailable = totalSeatsByType.getTotal().get(request.getBookingType()) -
+                                bookingRepo.findCountOfSeatByTypeAndStatus(request.getTrainNo(),request.getJourneyClass(),
+                                                                           request.getStartDt(),request.getEndDt(),
+                                                                           request.getBookingType(),BookingStatus.CONFIRMED
+                                                                          );
 
         for(int i=1;i<=seatsAvailable;i++){
 
