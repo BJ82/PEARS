@@ -7,6 +7,7 @@ import com.rail.app.railreservation.booking.enums.BookingStatus;
 import com.rail.app.railreservation.booking.exception.BookingCannotOpenException;
 import com.rail.app.railreservation.booking.exception.BookingNotOpenException;
 import com.rail.app.railreservation.booking.exception.InvalidBookingException;
+import com.rail.app.railreservation.booking.exception.TatkalNotOpenException;
 import com.rail.app.railreservation.booking.repository.BookingOpenRepository;
 import com.rail.app.railreservation.booking.repository.BookingRepository;
 import com.rail.app.railreservation.booking.service.BookingService;
@@ -29,6 +30,7 @@ import org.springframework.stereotype.Service;
 import java.sql.Timestamp;
 import java.time.Instant;
 import java.time.LocalDate;
+import java.time.LocalTime;
 import java.util.*;
 
 @Service
@@ -73,8 +75,84 @@ public class BookingServiceImpl implements BookingService {
         this.pnrs = Collections.synchronizedList(new ArrayList<>());
     }
 
+    public BookingResponse bookTicket(BookingRequest request) throws InvalidBookingException, BookingNotOpenException, TimeTableNotFoundException, TatkalNotOpenException {
 
-    public BookingResponse book(BookingRequest request) throws InvalidBookingException, BookingNotOpenException, TimeTableNotFoundException {
+        BookingResponse response = null;
+        String bookingType = request.getBookingType();
+        switch(bookingType){
+
+            case "general":
+                response = book(request);
+                break;
+
+            case "tatkal":
+                response =  bookTatkal(request);
+                break;
+
+            case "ladies":
+                response =  bookLadies(request);
+                break;
+
+            case "senior citizen":
+                response =  bookSeniorCitizen(request);
+                break;
+
+            case "child":
+                response =  bookChild(request);
+                break;
+        }
+
+        return response;
+    }
+
+    private BookingResponse bookTatkal(BookingRequest request)
+            throws InvalidBookingException, TimeTableNotFoundException, BookingNotOpenException, TatkalNotOpenException {
+
+        BookingResponse response = null;
+
+        LocalDate doj = Utils.toLocalDate(request.getDoj());
+
+        if(isTatkalOpen(doj)){
+
+            response = book(request);
+        }
+        else{
+            throw new TatkalNotOpenException("Tatkal Booking Not Yet Started!");
+        }
+
+      return response;
+    }
+
+    private boolean isTatkalOpen(LocalDate doj){
+
+        boolean isTatkalOpen = false;
+
+        LocalTime tatkalStartTime  = LocalTime.of(10,0,0);
+        LocalTime tatkalEndTime  = LocalTime.of(11,0,0);
+
+        LocalTime now = LocalTime.now();
+
+        LocalDate dojMinusOneDay = doj.minusDays(1);
+
+        if(LocalDate.now().equals(dojMinusOneDay)){
+            if(now.equals(tatkalStartTime) || (now.isAfter(tatkalStartTime) && now.isBefore(tatkalEndTime))){
+                isTatkalOpen = true;
+            }
+        }
+
+        return isTatkalOpen;
+    }
+
+    private BookingResponse bookLadies(BookingRequest request)
+            throws InvalidBookingException, TimeTableNotFoundException, BookingNotOpenException{}
+
+    private BookingResponse bookSeniorCitizen(BookingRequest request)
+            throws InvalidBookingException, TimeTableNotFoundException, BookingNotOpenException{}
+
+    private BookingResponse bookChild(BookingRequest request)
+            throws InvalidBookingException, TimeTableNotFoundException, BookingNotOpenException{}
+
+    private BookingResponse book(BookingRequest request) throws InvalidBookingException, BookingNotOpenException, TimeTableNotFoundException {
 
         logger.info(INSIDE_BOOKING_SERVICE);
 
@@ -85,11 +163,11 @@ public class BookingServiceImpl implements BookingService {
         //Check if Route is valid
         isValidRoute(request.getFrom(), request.getTo(), trn)
                 .orElseThrow(() -> new InvalidBookingException("TrainNo:" + request.getTrainNo() + " Not Running " + "Between " +
-                                                                request.getFrom() + "And " + request.getTo()));
+                        request.getFrom() + "And " + request.getTo()));
         //Check If Booking Is Allowed
         isBookingOpen(request).orElseThrow(()->new BookingNotOpenException("Booking Not Yet Open For TrainNo:"+request.getTrainNo()+" For Dates "+request.getStartDt()+" And "+request.getEndDt()
-                                                                      )
-                                          );
+                )
+        );
 
         //Check if DOJ is Valid
         String pssngrJournyStartStn = request.getFrom();
@@ -109,7 +187,7 @@ public class BookingServiceImpl implements BookingService {
 
 
         logger.info("Processing Ticket Booking For TrainNo:{}, StartDate:{}, EndDate:{}",
-                     request.getTrainNo(),request.getStartDt(),request.getEndDt());
+                request.getTrainNo(),request.getStartDt(),request.getEndDt());
 
 
         seatNumbers.clear();
@@ -195,7 +273,7 @@ public class BookingServiceImpl implements BookingService {
         }
 
         logger.info("Completed Ticket Booking For TrainNo:{}, StartDate:{}, EndDate:{}",
-                             request.getTrainNo(),request.getStartDt(),request.getEndDt());
+                request.getTrainNo(),request.getStartDt(),request.getEndDt());
         return bookingResponse;
 
     }

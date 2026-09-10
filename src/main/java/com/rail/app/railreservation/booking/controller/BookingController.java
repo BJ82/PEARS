@@ -4,6 +4,7 @@ import com.rail.app.railreservation.booking.dto.*;
 import com.rail.app.railreservation.booking.exception.BookingCannotOpenException;
 import com.rail.app.railreservation.booking.exception.BookingNotOpenException;
 import com.rail.app.railreservation.booking.exception.InvalidBookingException;
+import com.rail.app.railreservation.booking.exception.TatkalNotOpenException;
 import com.rail.app.railreservation.booking.service.BookingService;
 import com.rail.app.railreservation.enquiry.exception.PnrNoIncorrectException;
 import com.rail.app.railreservation.trainmanagement.exception.TimeTableNotFoundException;
@@ -33,12 +34,12 @@ public class BookingController {
     //Ideally should be idempotent.
     //Use put or patch
     @PostMapping("/booking")
-    public ResponseEntity<BookingResponse> bookTicket(@RequestBody BookingRequest bookingRequest) throws InvalidBookingException, BookingNotOpenException, TimeTableNotFoundException {
+    public ResponseEntity<BookingResponse> bookTicket(@RequestBody BookingRequest bookingRequest) throws InvalidBookingException, BookingNotOpenException, TimeTableNotFoundException, TatkalNotOpenException {
 
         logger.info(INSIDE_BOOKING_CONTROLLER);
         logger.info("Processing Request For Ticket Booking");
 
-        BookingResponse bookingResponse= bookingService.book(bookingRequest);
+        BookingResponse bookingResponse= bookingService.bookTicket(bookingRequest);
 
         URI location = ServletUriComponentsBuilder.fromCurrentRequestUri()
                 .path("/{id}")
