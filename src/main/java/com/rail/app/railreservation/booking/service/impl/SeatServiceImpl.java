@@ -22,6 +22,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.Collectors;
 
 @Service
 public class SeatServiceImpl implements SeatService {
@@ -200,6 +201,10 @@ public class SeatServiceImpl implements SeatService {
                                                 request.getJourneyClass(),
                                                 Utils.toLocalDate(request.getStartDt()),
                                                 Utils.toLocalDate(request.getEndDt()));
+
+            bookings = bookings.stream().
+                       filter((b)->b.getBookingType().equals(request.getBookingType())).
+                       toList();
 
             String src;
             String dest;
