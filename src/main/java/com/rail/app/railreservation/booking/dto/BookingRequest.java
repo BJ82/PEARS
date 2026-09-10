@@ -21,6 +21,7 @@ public class BookingRequest {
     private String from;
     private String to;
     private JourneyClass journeyClass;
+    private String bookingType;
     private String doj;
     private List<Passenger> passengers= new ArrayList<>();
 }

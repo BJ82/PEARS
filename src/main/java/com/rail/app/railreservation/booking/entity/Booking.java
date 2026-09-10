@@ -32,6 +32,7 @@ public class Booking {
     private String startFrom;
     private String endAt;
     private LocalDate dtOfJourny;
+    private String bookingType;
 
     @Enumerated(EnumType.STRING)
     private JourneyClass journeyClass;
