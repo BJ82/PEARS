@@ -78,29 +78,17 @@ public class BookingServiceImpl implements BookingService {
     public BookingResponse bookTicket(BookingRequest request) throws InvalidBookingException, BookingNotOpenException, TimeTableNotFoundException, TatkalNotOpenException {
 
         BookingResponse response = null;
+
         String bookingType = request.getBookingType();
-        switch(bookingType){
 
-            case "general":
-                response = book(request);
-                break;
-
-            case "tatkal":
-                response =  bookTatkal(request);
-                break;
-
-            case "ladies":
-                response =  bookLadies(request);
-                break;
-
-            case "senior citizen":
-                response =  bookSeniorCitizen(request);
-                break;
-
-            case "child":
-                response =  bookChild(request);
-                break;
-        }
+        response = switch (bookingType) {
+            case "general" -> book(request);
+            case "tatkal" -> bookTatkal(request);
+            case "ladies" -> bookLadies(request);
+            case "senior citizen" -> bookSeniorCitizen(request);
+            case "child" -> bookChild(request);
+            default -> throw new InvalidBookingException("Booking Category Type Is Invalid");
+        };
 
         return response;
     }
