@@ -66,11 +66,13 @@ public class SeatServiceImpl implements SeatService {
         lstAllotedSeatNum = new AtomicInteger(getLastAllocatedSeatNo(request));
 
 
-        int seatsAvailable = totalSeatsByType.getTotal().get(request.getBookingType()) -
-                                bookingRepo.findCountOfSeatByTypeAndStatus(request.getTrainNo(),request.getJourneyClass(),
-                                                                           request.getStartDt(),request.getEndDt(),
-                                                                           request.getBookingType(),BookingStatus.CONFIRMED
-                                                                          );
+        int totalSeats = totalSeatsByType.getTotal().get(request.getBookingType());
+        int confirmedSeats = bookingRepo.findCountOfSeatByTypeAndStatus(request.getTrainNo(),request.getJourneyClass(),
+                                                                             request.getStartDt(),request.getEndDt(),
+                                                                             request.getBookingType(),BookingStatus.CONFIRMED
+                                                                             );
+        int seatsAvailable = totalSeats - confirmedSeats;
+
 
         for(int i=1;i<=seatsAvailable;i++){
 
