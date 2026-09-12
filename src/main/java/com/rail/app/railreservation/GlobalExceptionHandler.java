@@ -2,6 +2,7 @@ package com.rail.app.railreservation;
 
 import com.rail.app.railreservation.booking.exception.BookingCannotOpenException;
 import com.rail.app.railreservation.booking.exception.BookingNotOpenException;
+import com.rail.app.railreservation.booking.exception.TatkalNotOpenException;
 import com.rail.app.railreservation.enquiry.exception.*;
 import com.rail.app.railreservation.signup.exception.UserPresentException;
 import com.rail.app.railreservation.trainmanagement.exception.DuplicateTrainException;
@@ -146,5 +147,12 @@ public class GlobalExceptionHandler {
         logger.error(expiredJwtEx.getMessage());
 
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(expiredJwtEx.getMessage());
+    }
+    @ExceptionHandler(TatkalNotOpenException.class)
+    public ResponseEntity<String> tatkalNotOpenExceptionHandler(TatkalNotOpenException tatkalNotOpenException){
+
+        logger.error(tatkalNotOpenException.getMessage());
+
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(tatkalNotOpenException.getMessage());
     }
 }
