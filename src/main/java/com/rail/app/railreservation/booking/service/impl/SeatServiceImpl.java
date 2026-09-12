@@ -37,21 +37,18 @@ public class SeatServiceImpl implements SeatService {
 
     private final TrainService trainService;
 
-    private final int totalNoOfSeats;
-
     private final TotalSeatsByType totalSeatsByType;
 
     public SeatServiceImpl(SeatNoTrackerRepository seatNoTrackerRepo,
                            SeatCountRepository seatCountRepo, BookingRepository bookingRepo,
                            RouteService routeService, TrainService trainService,
-                           @Value("${total.no.of.seats}") int totalNoOfSeats, TotalSeatsByType totalSeatsByType) {
+                           TotalSeatsByType totalSeatsByType) {
 
         this.seatNoTrackerRepo = seatNoTrackerRepo;
         this.seatCountRepo = seatCountRepo;
         this.bookingRepo = bookingRepo;
         this.routeService = routeService;
         this.trainService = trainService;
-        this.totalNoOfSeats = totalNoOfSeats;
         this.totalSeatsByType = totalSeatsByType;
     }
 
@@ -68,9 +65,9 @@ public class SeatServiceImpl implements SeatService {
 
         int totalSeats = totalSeatsByType.getTotal().get(request.getBookingType());
         int confirmedSeats = bookingRepo.findCountOfSeatByTypeAndStatus(request.getTrainNo(),request.getJourneyClass(),
-                                                                             request.getStartDt(),request.getEndDt(),
+                                                                             Utils.toLocalDate(request.getStartDt()),Utils.toLocalDate(request.getEndDt()),
                                                                              request.getBookingType(),BookingStatus.CONFIRMED
-                                                                             );
+                                                                        );
         int seatsAvailable = totalSeats - confirmedSeats;
 
 

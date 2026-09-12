@@ -132,13 +132,22 @@ public class BookingServiceImpl implements BookingService {
     }
 
     private BookingResponse bookLadies(BookingRequest request)
-            throws InvalidBookingException, TimeTableNotFoundException, BookingNotOpenException{}
+            throws InvalidBookingException, TimeTableNotFoundException, BookingNotOpenException{
+
+        return book(request);
+    }
 
     private BookingResponse bookSeniorCitizen(BookingRequest request)
-            throws InvalidBookingException, TimeTableNotFoundException, BookingNotOpenException{}
+            throws InvalidBookingException, TimeTableNotFoundException, BookingNotOpenException{
+
+        return book(request);
+    }
 
     private BookingResponse bookChild(BookingRequest request)
-            throws InvalidBookingException, TimeTableNotFoundException, BookingNotOpenException{}
+            throws InvalidBookingException, TimeTableNotFoundException, BookingNotOpenException{
+
+        return book(request);
+    }
 
     private BookingResponse book(BookingRequest request) throws InvalidBookingException, BookingNotOpenException, TimeTableNotFoundException {
 
