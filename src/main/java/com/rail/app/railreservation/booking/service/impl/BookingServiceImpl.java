@@ -1,5 +1,6 @@
 package com.rail.app.railreservation.booking.service.impl;
 
+import com.rail.app.railreservation.booking.RequestValidator;
 import com.rail.app.railreservation.booking.dto.*;
 import com.rail.app.railreservation.booking.entity.Booking;
 import com.rail.app.railreservation.booking.entity.BookingOpen;
@@ -78,6 +79,7 @@ public class BookingServiceImpl implements BookingService {
 
         logger.info(INSIDE_BOOKING_SERVICE);
 
+        RequestValidator.validate(request);
         //Check if Train No is Valid
         Train trn = trainService.getTrainByNo(request.getTrainNo())
                 .orElseThrow(() -> new InvalidBookingException("Booking Not Allowed On Non Existent Train"));
@@ -305,8 +307,9 @@ public class BookingServiceImpl implements BookingService {
 
     public Optional<Boolean> isBookingOpen(BookingRequest request){
 
-        Optional<Boolean> isBookingOpenAsOptional = bookingOpenRepo.isBookingOpen(request.getTrainNo(),Utils.toLocalDate(request.getStartDt()),
-                Utils.toLocalDate(request.getEndDt()));
+        Optional<Boolean> isBookingOpenAsOptional = bookingOpenRepo.isBookingOpen(request.getTrainNo(),
+                                                                        Utils.toLocalDate(request.getStartDt()),
+                                                                        Utils.toLocalDate(request.getEndDt()));
 
         if(isBookingOpenAsOptional.get() == true)
             return isBookingOpenAsOptional;
