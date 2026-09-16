@@ -1,24 +1,21 @@
 package com.rail.app.railreservation.booking.service.impl;
 
-import com.rail.app.railreservation.booking.RequestValidator;
+import com.rail.app.railreservation.booking.BookingValidator;
 import com.rail.app.railreservation.booking.dto.*;
 import com.rail.app.railreservation.booking.entity.Booking;
 import com.rail.app.railreservation.booking.entity.BookingOpen;
 import com.rail.app.railreservation.booking.enums.BookingStatus;
 import com.rail.app.railreservation.booking.exception.BookingCannotOpenException;
-import com.rail.app.railreservation.booking.exception.BookingNotOpenException;
-import com.rail.app.railreservation.booking.exception.InvalidBookingException;
+import com.rail.app.railreservation.booking.exception.InvalidBookingAttemptException;
 import com.rail.app.railreservation.booking.repository.BookingOpenRepository;
 import com.rail.app.railreservation.booking.repository.BookingRepository;
 import com.rail.app.railreservation.booking.service.BookingService;
 import com.rail.app.railreservation.booking.service.SeatService;
 import com.rail.app.railreservation.enquiry.exception.PnrNoIncorrectException;
-import com.rail.app.railreservation.enquiry.exception.TrainNotFoundException;
 import com.rail.app.railreservation.route.entity.Route;
 import com.rail.app.railreservation.route.service.RouteService;
 import com.rail.app.railreservation.trainmanagement.entity.Train;
 import com.rail.app.railreservation.trainmanagement.enums.JourneyClass;
-import com.rail.app.railreservation.trainmanagement.exception.TimeTableNotFoundException;
 import com.rail.app.railreservation.trainmanagement.service.TrainArrivalDateService;
 import com.rail.app.railreservation.trainmanagement.service.TrainService;
 import com.rail.app.railreservation.util.Utils;
@@ -53,21 +50,24 @@ public class BookingServiceImpl implements BookingService {
 
     private final TrainArrivalDateService trainArrivalDateService;
 
+    private final BookingValidator bookingValidator;
+
     private final SeatService seatService;
     private final ModelMapper mapper;
 
     public BookingServiceImpl(TrainService trainService,
-                          RouteService routeService,
-                          BookingRepository bookingRepo, BookingOpenRepository bookingOpenRepo,
-                          TrainArrivalDateService trainArrivalDateService,
-                          SeatService seatService,
-                          ModelMapper mapper) {
+                              RouteService routeService,
+                              BookingRepository bookingRepo, BookingOpenRepository bookingOpenRepo,
+                              TrainArrivalDateService trainArrivalDateService, BookingValidator bookingValidator,
+                              SeatService seatService,
+                              ModelMapper mapper) {
 
         this.trainService = trainService;
         this.routeService = routeService;
         this.bookingRepo = bookingRepo;
         this.bookingOpenRepo = bookingOpenRepo;
         this.trainArrivalDateService = trainArrivalDateService;
+        this.bookingValidator = bookingValidator;
         this.seatService = seatService;
         this.mapper = mapper;
         this.seatNumbers = Collections.synchronizedSet(new LinkedHashSet<>());
@@ -75,40 +75,11 @@ public class BookingServiceImpl implements BookingService {
     }
 
 
-    public BookingResponse book(BookingRequest request) throws InvalidBookingException, BookingNotOpenException, TimeTableNotFoundException {
+    public BookingResponse book(BookingRequest request) throws InvalidBookingAttemptException {
 
         logger.info(INSIDE_BOOKING_SERVICE);
 
-        RequestValidator.validate(request);
-        //Check if Train No is Valid
-        Train trn = trainService.getTrainByNo(request.getTrainNo())
-                .orElseThrow(() -> new InvalidBookingException("Booking Not Allowed On Non Existent Train"));
-
-        //Check if Route is valid
-        isValidRoute(request.getFrom(), request.getTo(), trn)
-                .orElseThrow(() -> new InvalidBookingException("TrainNo:" + request.getTrainNo() + " Not Running " + "Between " +
-                                                                request.getFrom() + "And " + request.getTo()));
-        //Check If Booking Is Allowed
-        isBookingOpen(request).orElseThrow(()->new BookingNotOpenException("Booking Not Yet Open For TrainNo:"+request.getTrainNo()+" For Dates "+request.getStartDt()+" And "+request.getEndDt()
-                                                                      )
-                                          );
-
-        //Check if DOJ is Valid
-        String pssngrJournyStartStn = request.getFrom();
-
-        LocalDate trainStartDateFrmSource = Utils.toLocalDate(request.getStartDt());
-
-        LocalDate dateOfArrival =  trainArrivalDateService.getArrivalDate(request.getTrainNo(),
-                pssngrJournyStartStn,trainStartDateFrmSource);
-
-        LocalDate dateOfJourney = Utils.toLocalDate(request.getDoj());
-
-        if(!dateOfArrival.equals(dateOfJourney))
-            throw new InvalidBookingException("Invalid Booking Because ",
-                    new TrainNotFoundException("No Train Found For Date Of Journey: "+dateOfJourney.toString()));
-
-
-
+        bookingValidator.validate(request);
 
         logger.info("Processing Ticket Booking For TrainNo:{}, StartDate:{}, EndDate:{}",
                      request.getTrainNo(),request.getStartDt(),request.getEndDt());
