@@ -2,17 +2,16 @@ package com.rail.app.railreservation.booking;
 
 import com.rail.app.railreservation.booking.dto.BookingOpenRequest;
 import com.rail.app.railreservation.booking.dto.BookingRequest;
-import com.rail.app.railreservation.booking.exception.BookingNotOpenException;
-import com.rail.app.railreservation.booking.exception.InvalidBookingAttemptException;
-import com.rail.app.railreservation.booking.exception.InvalidBookingTypeException;
-import com.rail.app.railreservation.booking.exception.InvalidDateOfJourneyException;
+import com.rail.app.railreservation.booking.exception.*;
 import com.rail.app.railreservation.booking.repository.BookingOpenRepository;
 import com.rail.app.railreservation.enquiry.exception.TrainNotFoundException;
 import com.rail.app.railreservation.route.entity.Route;
 import com.rail.app.railreservation.route.exception.InvalidJourneyRouteException;
 import com.rail.app.railreservation.route.service.RouteService;
+import com.rail.app.railreservation.trainmanagement.dto.TimeTableEnquiryResponse;
 import com.rail.app.railreservation.trainmanagement.entity.Train;
 import com.rail.app.railreservation.trainmanagement.exception.TimeTableNotFoundException;
+import com.rail.app.railreservation.trainmanagement.service.TimeTableService;
 import com.rail.app.railreservation.trainmanagement.service.TrainArrivalDateService;
 import com.rail.app.railreservation.trainmanagement.service.TrainService;
 import com.rail.app.railreservation.util.Utils;
@@ -31,12 +30,15 @@ public class BookingValidator {
 
     private final BookingOpenRepository bookingOpenRepo;
 
+    private final TimeTableService timeTableService;
+
     private final TrainArrivalDateService trainArrivalDateService;
 
-    public BookingValidator(TrainService trainService, RouteService routeService, BookingOpenRepository bookingOpenRepo, TrainArrivalDateService trainArrivalDateService) {
+    public BookingValidator(TrainService trainService, RouteService routeService, BookingOpenRepository bookingOpenRepo, TimeTableService timeTableService, TrainArrivalDateService trainArrivalDateService) {
         this.trainService = trainService;
         this.routeService = routeService;
         this.bookingOpenRepo = bookingOpenRepo;
+        this.timeTableService = timeTableService;
         this.trainArrivalDateService = trainArrivalDateService;
     }
 
@@ -127,13 +129,14 @@ public class BookingValidator {
 
         LocalDate dateOfArrival = null;
         try {
+
             dateOfArrival = trainArrivalDateService.getArrivalDate(request.getTrainNo(),
                                                                     pssngrJournyStartStn,trainStartDateFrmSource);
-        } catch (TimeTableNotFoundException e) {
+        } catch (TimeTableNotFoundException timeTableNotFoundEx) {
 
-            Throwable cause1 = new TimeTableNotFoundException("Time Table Not Added For TrainNo: "+request.getTrainNo());
-            Throwable cause2 = new InvalidDateOfJourneyException("Invalid Date Of Journey Because",cause1,request.getDoj());
-            throw new InvalidBookingAttemptException("Invalid Booking Attempted",cause2);
+            Throwable cause = new UnableToVerifyDateOfJourneyException("Cannot verify Date Of Journey Due To "
+                                                                            ,timeTableNotFoundEx,request.getDoj());
+            throw new InvalidBookingAttemptException("Booking Attempt Is Invalid Because ",cause);
         }
 
         LocalDate dateOfJourney = Utils.toLocalDate(request.getDoj());

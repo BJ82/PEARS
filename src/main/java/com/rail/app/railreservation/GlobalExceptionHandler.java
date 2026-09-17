@@ -3,7 +3,10 @@ package com.rail.app.railreservation;
 import com.rail.app.railreservation.booking.exception.BookingCannotOpenException;
 import com.rail.app.railreservation.booking.exception.BookingNotOpenException;
 import com.rail.app.railreservation.booking.exception.InvalidBookingAttemptException;
-import com.rail.app.railreservation.enquiry.exception.*;
+import com.rail.app.railreservation.enquiry.exception.InvalidSeatEnquiryException;
+import com.rail.app.railreservation.enquiry.exception.PnrNoIncorrectException;
+import com.rail.app.railreservation.enquiry.exception.RouteNotFoundException;
+import com.rail.app.railreservation.enquiry.exception.TrainNotFoundException;
 import com.rail.app.railreservation.signup.exception.UserPresentException;
 import com.rail.app.railreservation.trainmanagement.exception.DuplicateTrainException;
 import com.rail.app.railreservation.trainmanagement.exception.TimeTableAddFailException;
@@ -19,8 +22,6 @@ import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
-
-import java.util.Arrays;
 
 @ControllerAdvice
 public class GlobalExceptionHandler {
@@ -156,6 +157,10 @@ public class GlobalExceptionHandler {
 
         Throwable cause = invldBkngAttmptEx.getCause();
         String errorMsg = invldBkngAttmptEx.getMessage()+cause.toString();
+
+        if(cause.getCause() != null)
+            errorMsg = errorMsg +".This Is Due To "+ cause.getCause().getMessage();
+
         logger.error(errorMsg);
 
         logger.error(invldBkngAttmptEx);
