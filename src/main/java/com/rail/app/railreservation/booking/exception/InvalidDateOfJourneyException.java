@@ -9,8 +9,9 @@ public class InvalidDateOfJourneyException extends Exception{
         this.doj = doj;
     }
 
-    public InvalidDateOfJourneyException(String message) {
+    public InvalidDateOfJourneyException(String message, String doj) {
         super(message);
+        this.doj = doj;
     }
 
     @Override
@@ -18,11 +19,6 @@ public class InvalidDateOfJourneyException extends Exception{
         return "InvalidDateOfJourneyException{" +
                 "doj='" + doj + '\'' +
                 '}';
-    }
-
-     public InvalidDateOfJourneyException(String doj, String message){
-        super(message);
-        this.doj = doj;
     }
 
     public String getDoj() {
