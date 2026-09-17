@@ -18,4 +18,12 @@ public class InvalidJourneyRouteException extends Exception{
         this.from = from;
         this.to = to;
     }
+
+    @Override
+    public String toString() {
+        return "InvalidJourneyRouteException{" +
+                "from='" + from + '\'' +
+                ", to='" + to + '\'' +
+                '}';
+    }
 }

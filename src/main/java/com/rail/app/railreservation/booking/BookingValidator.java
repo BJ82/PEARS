@@ -12,6 +12,7 @@ import com.rail.app.railreservation.route.entity.Route;
 import com.rail.app.railreservation.route.exception.InvalidJourneyRouteException;
 import com.rail.app.railreservation.route.service.RouteService;
 import com.rail.app.railreservation.trainmanagement.entity.Train;
+import com.rail.app.railreservation.trainmanagement.exception.TimeTableNotFoundException;
 import com.rail.app.railreservation.trainmanagement.service.TrainArrivalDateService;
 import com.rail.app.railreservation.trainmanagement.service.TrainService;
 import com.rail.app.railreservation.util.Utils;
@@ -45,21 +46,21 @@ public class BookingValidator {
         if(!isValidTrainNo(request.getTrainNo())){
             cause = new TrainNotFoundException("Train Not Found For TrainNo: ", request.getTrainNo());
         }
-        else if(!isValidDOJ(request.getDoj())){
+        else if(!isValidDOJ(request)){
             cause = new InvalidDateOfJourneyException("Date Of Journey Not Equal To Train Arrival Date",request.getDoj());
         }
         else if(!isBookingOpen(request)){
             cause = new BookingNotOpenException("Booking Not Yet Opened For TrainNo: "+request.getTrainNo());
         }
-        else if(!isValidRoute(request.getRoute())){
-            cause = new InvalidJourneyRouteException("Invalid Source:"+request.getFrom()+ "And Destination:"+request.getTo());
+        else if(!isValidRoute(request)){
+            cause = new InvalidJourneyRouteException("Invalid Source And Destination: ",request.getFrom(),request.getTo());
         }
-        else if(!isValidBookingType(request.getBookingType())){
-            cause = new InvalidBookingTypeException("Invalid Booking Type",request.getBookingType());
+        else if(!isValidBookingType(request)){
+            cause = new InvalidBookingTypeException("Invalid Booking Type: ",request.getBookingType());
         }
         else return;
 
-        throw new InvalidBookingAttemptException("Invalid Booking Attempt",cause);
+        throw new InvalidBookingAttemptException("Invalid Booking Attempt Caused Due To: ",cause);
 
     }
 
@@ -76,10 +77,15 @@ public class BookingValidator {
 
     }
 
-    private boolean isValidRoute(String from,String to,Train trn){
+    private boolean isValidRoute(BookingRequest request){
+
+        String from = request.getFrom();
+        String to = request.getTo();
+        int trainNo = request.getTrainNo();
 
         boolean isRouteValid = false;
 
+        Train trn = trainService.getTrainByNo(trainNo).get();
         Optional<Route> routeOpt = routeService.getRouteById(trn.getRouteId());
 
         if(routeOpt.isPresent()){
@@ -111,7 +117,7 @@ public class BookingValidator {
         return isBookingOpenAsOptional.get();
     }
 
-    private boolean isValidDOJ(BookingRequest request){
+    private boolean isValidDOJ(BookingRequest request) throws InvalidBookingAttemptException {
 
         boolean isValidDOJ = false;
 
@@ -119,8 +125,16 @@ public class BookingValidator {
 
         LocalDate trainStartDateFrmSource = Utils.toLocalDate(request.getStartDt());
 
-        LocalDate dateOfArrival =  trainArrivalDateService.getArrivalDate(request.getTrainNo(),
-                pssngrJournyStartStn,trainStartDateFrmSource);
+        LocalDate dateOfArrival = null;
+        try {
+            dateOfArrival = trainArrivalDateService.getArrivalDate(request.getTrainNo(),
+                                                                    pssngrJournyStartStn,trainStartDateFrmSource);
+        } catch (TimeTableNotFoundException e) {
+
+            Throwable cause1 = new TimeTableNotFoundException("Time Table Not Added For TrainNo: "+request.getTrainNo());
+            Throwable cause2 = new InvalidDateOfJourneyException("Invalid Date Of Journey Because",cause1,request.getDoj());
+            throw new InvalidBookingAttemptException("Invalid Booking Attempted",cause2);
+        }
 
         LocalDate dateOfJourney = Utils.toLocalDate(request.getDoj());
 

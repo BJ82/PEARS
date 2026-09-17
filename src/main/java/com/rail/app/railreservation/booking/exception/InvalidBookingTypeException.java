@@ -6,6 +6,13 @@ public class InvalidBookingTypeException extends Exception {
         return bookingType;
     }
 
+    @Override
+    public String toString() {
+        return "InvalidBookingTypeException{" +
+                "bookingType='" + bookingType + '\'' +
+                '}';
+    }
+
     private final String bookingType;
 
     public InvalidBookingTypeException(String message, String bookingType) {
