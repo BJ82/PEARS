@@ -5,6 +5,7 @@ import com.rail.app.railreservation.booking.exception.BookingCannotOpenException
 import com.rail.app.railreservation.booking.exception.InvalidBookingAttemptException;
 import com.rail.app.railreservation.booking.service.BookingService;
 import com.rail.app.railreservation.enquiry.exception.PnrNoIncorrectException;
+import jakarta.validation.Valid;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.http.ResponseEntity;
@@ -31,7 +32,7 @@ public class BookingController {
     //Ideally should be idempotent.
     //Use put or patch
     @PostMapping("/booking")
-    public ResponseEntity<BookingResponse> bookTicket(@RequestBody BookingRequest bookingRequest) throws InvalidBookingAttemptException {
+    public ResponseEntity<BookingResponse> bookTicket(@Valid @RequestBody BookingRequest bookingRequest) throws InvalidBookingAttemptException {
 
         logger.info(INSIDE_BOOKING_CONTROLLER);
         logger.info("Processing Request For Ticket Booking");
