@@ -1,4 +1,4 @@
-package com.rail.app.railreservation.booking;
+package com.rail.app.railreservation.booking.validator;
 
 import com.rail.app.railreservation.booking.dto.BookingOpenRequest;
 import com.rail.app.railreservation.booking.dto.BookingRequest;
@@ -8,7 +8,6 @@ import com.rail.app.railreservation.enquiry.exception.TrainNotFoundException;
 import com.rail.app.railreservation.route.entity.Route;
 import com.rail.app.railreservation.route.exception.InvalidJourneyRouteException;
 import com.rail.app.railreservation.route.service.RouteService;
-import com.rail.app.railreservation.trainmanagement.dto.TimeTableEnquiryResponse;
 import com.rail.app.railreservation.trainmanagement.entity.Train;
 import com.rail.app.railreservation.trainmanagement.exception.TimeTableNotFoundException;
 import com.rail.app.railreservation.trainmanagement.service.TimeTableService;

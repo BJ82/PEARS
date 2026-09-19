@@ -1,6 +1,6 @@
 package com.rail.app.railreservation.booking.service.impl;
 
-import com.rail.app.railreservation.booking.BookingValidator;
+import com.rail.app.railreservation.booking.validator.BookingValidator;
 import com.rail.app.railreservation.booking.dto.*;
 import com.rail.app.railreservation.booking.entity.Booking;
 import com.rail.app.railreservation.booking.entity.BookingOpen;
