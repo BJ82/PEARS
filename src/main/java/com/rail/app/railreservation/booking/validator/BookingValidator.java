@@ -65,8 +65,6 @@ public class BookingValidator {
 
     }
 
-    public static void validate(BookingOpenRequest request){}
-
     private boolean isValidTrainNo(int trainNo){
 
         boolean isValidTrainNo = false;
