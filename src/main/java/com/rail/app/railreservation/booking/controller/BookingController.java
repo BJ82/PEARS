@@ -6,16 +6,19 @@ import com.rail.app.railreservation.booking.exception.InvalidBookingAttemptExcep
 import com.rail.app.railreservation.booking.service.BookingService;
 import com.rail.app.railreservation.enquiry.exception.PnrNoIncorrectException;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.Positive;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import java.net.URI;
 
 @RestController
+@Validated
 @RequestMapping("api/v1")
 public class BookingController {
 
@@ -50,8 +53,8 @@ public class BookingController {
     //Ideally should be idempotent.
     //Use put or patch
     @PreAuthorize("hasRole('ROLE_ADMIN')")
-    @PostMapping("trains/{trainNo}/bookings/open")
-    public ResponseEntity<BookingOpenResponse> openBooking(@PathVariable("trainNo") int trainNo,@RequestBody BookingOpenRequest bookingOpenRequest) throws BookingCannotOpenException {
+    @PostMapping("trains/{trainNo}/booking/")
+    public ResponseEntity<BookingOpenResponse> openBooking(@Valid @PathVariable("trainNo") @Positive int trainNo, @RequestBody BookingOpenRequest bookingOpenRequest) throws BookingCannotOpenException {
 
         logger.info(INSIDE_BOOKING_CONTROLLER);
         logger.info("Processing Request To Open Booking");
@@ -65,13 +68,13 @@ public class BookingController {
     }
 
     @GetMapping("trains/{trainNo}/bookings/status")
-    public ResponseEntity<BookingOpenInfo> isBookingOpen(@PathVariable("trainNo") int trainNo){
+    public ResponseEntity<BookingOpenInfo> isBookingOpen(@PathVariable("trainNo") @Positive int trainNo){
 
         return ResponseEntity.ok(bookingService.getBookingOpenInfo(trainNo));
     }
 
     @DeleteMapping("/bookings/{pnrNo}")
-    public ResponseEntity<String> cancelTicket(@PathVariable("pnrNo") int pnrNo) throws PnrNoIncorrectException {
+    public ResponseEntity<String> cancelTicket(@PathVariable("pnrNo") @Positive int pnrNo) throws PnrNoIncorrectException {
 
         return ResponseEntity.ok(bookingService.cancelBooking(pnrNo));
 
