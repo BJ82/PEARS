@@ -239,11 +239,6 @@ public class BookingServiceImpl implements BookingService {
 
         logger.info(INSIDE_BOOKING_SERVICE);
 
-        LocalDate startDt = Utils.toLocalDate(request.getStartDt());
-
-        if(startDt.isBefore(LocalDate.now()))
-            throw new BookingCannotOpenException("Booking Open Date Cannot Be In Past.");
-
         trainService.getTrainByNo(trainNo)
                 .orElseThrow(() -> new BookingCannotOpenException("Not Allowed To Open Booking On Non Existent Train"));
 

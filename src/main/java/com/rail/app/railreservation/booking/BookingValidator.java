@@ -46,19 +46,19 @@ public class BookingValidator {
 
         Exception cause = null;
         if(!isValidTrainNo(request.getTrainNo())){
-            cause = new TrainNotFoundException("Train Not Found For TrainNo: ", request.getTrainNo());
+            cause = new TrainNotFoundException("Train Not Found For TrainNo: "+request.getTrainNo(), request.getTrainNo());
         }
         else if(!isValidDOJ(request)){
-            cause = new InvalidDateOfJourneyException("Date Of Journey Not Equal To Train Arrival Date",request.getDoj());
+            cause = new InvalidDateOfJourneyException("Date Of Journey: "+request.getDoj()+" Is Not Equal To Train Arrival Date.Please Check The TimeTable.",request.getDoj());
         }
         else if(!isBookingOpen(request)){
             cause = new BookingNotOpenException("Booking Not Yet Opened For TrainNo: "+request.getTrainNo());
         }
         else if(!isValidRoute(request)){
-            cause = new InvalidJourneyRouteException("Invalid Source And Destination: ",request.getFrom(),request.getTo());
+            cause = new InvalidJourneyRouteException("Source: "+request.getFrom()+" And Destination: "+request.getTo()+"Are Invalid",request.getFrom(),request.getTo());
         }
         else if(!isValidBookingType(request)){
-            cause = new InvalidBookingTypeException("Invalid Booking Type: ",request.getBookingType());
+            cause = new InvalidBookingTypeException("Invalid Booking Type: "+request.getBookingType(),request.getBookingType());
         }
         else return;
 
