@@ -1,8 +1,9 @@
 package com.rail.app.railreservation.booking.dto;
 
+import com.rail.app.railreservation.booking.validator.FirstStep;
+import com.rail.app.railreservation.booking.validator.SecondStep;
 import com.rail.app.railreservation.util.Utils;
 import jakarta.validation.constraints.AssertTrue;
-import jakarta.validation.constraints.Future;
 import jakarta.validation.constraints.NotBlank;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -15,14 +16,22 @@ import java.time.LocalDate;
 @NoArgsConstructor
 public class BookingOpenRequest {
 
-    @NotBlank(message = "Please provide valid start date")
-    @Future(message = "Booking open start date should be greater than present date")
+    @NotBlank(groups = FirstStep.class,message = "Please provide valid start date")
     private String startDt;
 
-    @NotBlank(message = "Please provide valid end date")
+    @NotBlank(groups = FirstStep.class,message = "Please provide valid end date")
     private String endDt;
 
-    @AssertTrue(message = "Booking open start date cannot be after end date")
+    @AssertTrue(groups = SecondStep.class,message = "Booking open start date should be greater than present date")
+    public boolean isStartDateAfterPresentDate(){
+
+        LocalDate startDate = Utils.toLocalDate(startDt);
+
+        return startDate.isAfter(LocalDate.now()) || startDate.isEqual(LocalDate.now());
+    }
+
+
+    @AssertTrue(groups = SecondStep.class,message = "Booking open start date cannot be after end date")
     public boolean isStartDateBeforeEndDate(){
 
         LocalDate startDate = Utils.toLocalDate(startDt);

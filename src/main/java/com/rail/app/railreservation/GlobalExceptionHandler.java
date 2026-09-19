@@ -12,7 +12,6 @@ import com.rail.app.railreservation.trainmanagement.exception.DuplicateTrainExce
 import com.rail.app.railreservation.trainmanagement.exception.TimeTableAddFailException;
 import com.rail.app.railreservation.trainmanagement.exception.TimeTableNotFoundException;
 import com.rail.app.railreservation.trainmanagement.exception.TimeTableWithoutTrainException;
-import com.rail.app.railreservation.util.Utils;
 import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.security.SignatureException;
 import org.apache.logging.log4j.LogManager;
@@ -160,29 +159,27 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(InvalidBookingAttemptException.class)
     public ResponseEntity<String> invlidBkngAttmptHandler(InvalidBookingAttemptException invldBkngAttmptEx){
 
-        String errorMsg = invldBkngAttmptEx.getMessage();
+        StringBuilder errorMsg = new StringBuilder(invldBkngAttmptEx.getMessage());
 
-        Throwable cause1 = invldBkngAttmptEx.getCause();
-        if(!Utils.isNull(cause1))
-            errorMsg = errorMsg + cause1.getMessage();
+        Throwable cause = invldBkngAttmptEx.getCause();
 
+        while(cause != null){
 
-        Throwable cause2 = cause1.getCause();
-        if(!Utils.isNull(cause2))
-            errorMsg = errorMsg +".This Is Due To "+cause2.getMessage();
+            errorMsg.append(cause.getMessage());
 
-        logger.error(errorMsg);
+            cause = cause.getCause();
 
-        logger.error(invldBkngAttmptEx);
+        }
 
-        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorMsg);
+        logger.error(errorMsg.toString());
+
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorMsg.toString());
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<Map<String, String>>  methodArgInvalidHandler(MethodArgumentNotValidException methodArgInvalidEx){
 
         logger.error(methodArgInvalidEx.getMessage());
-        logger.error(methodArgInvalidEx);
 
         Map<String, String> errors = new HashMap<>();
 

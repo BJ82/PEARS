@@ -4,6 +4,7 @@ import com.rail.app.railreservation.booking.dto.*;
 import com.rail.app.railreservation.booking.exception.BookingCannotOpenException;
 import com.rail.app.railreservation.booking.exception.InvalidBookingAttemptException;
 import com.rail.app.railreservation.booking.service.BookingService;
+import com.rail.app.railreservation.booking.validator.ValidationSequence;
 import com.rail.app.railreservation.enquiry.exception.PnrNoIncorrectException;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Positive;
@@ -54,7 +55,7 @@ public class BookingController {
     //Use put or patch
     @PreAuthorize("hasRole('ROLE_ADMIN')")
     @PostMapping("trains/{trainNo}/booking/")
-    public ResponseEntity<BookingOpenResponse> openBooking(@Valid @PathVariable("trainNo") @Positive int trainNo, @RequestBody BookingOpenRequest bookingOpenRequest) throws BookingCannotOpenException {
+    public ResponseEntity<BookingOpenResponse> openBooking(@PathVariable("trainNo") @Positive int trainNo, @Validated(ValidationSequence.class) @RequestBody BookingOpenRequest bookingOpenRequest) throws BookingCannotOpenException {
 
         logger.info(INSIDE_BOOKING_CONTROLLER);
         logger.info("Processing Request To Open Booking");
