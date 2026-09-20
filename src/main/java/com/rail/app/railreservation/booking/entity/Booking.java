@@ -44,7 +44,7 @@ public class Booking {
 
     public Booking(String name, int age, String sex, int trainNo,
                    LocalDate startDt, LocalDate endDt, String startFrom,
-                   String to, LocalDate dtOfJourny, JourneyClass journeyClass,
+                   String to, LocalDate dtOfJourny, String bookingType,JourneyClass journeyClass,
                    BookingStatus bookingStatus, Timestamp timestamp, int seatNo) {
 
         this.name = name;
@@ -56,6 +56,7 @@ public class Booking {
         this.startFrom = startFrom;
         this.endAt = to;
         this.dtOfJourny = dtOfJourny;
+        this.bookingType = bookingType;
         this.journeyClass = journeyClass;
         this.bookingStatus = bookingStatus;
         this.timestamp = timestamp;

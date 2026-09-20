@@ -85,7 +85,7 @@ public class BookingServiceImpl implements BookingService {
             case "general" -> book(request);
             case "tatkal" -> bookTatkal(request);
             case "ladies" -> bookLadies(request);
-            case "senior citizen" -> bookSeniorCitizen(request);
+            case "senior" -> bookSeniorCitizen(request);
             case "child" -> bookChild(request);
             default -> throw new InvalidBookingException("Booking Category Type Is Invalid");
         };
@@ -216,11 +216,11 @@ public class BookingServiceImpl implements BookingService {
 
 
             Booking bkng =  bookingRepo.save(new Booking(psngr.getName(), psngr.getAge(), psngr.getSex(),
-                    request.getTrainNo(), Utils.toLocalDate(request.getStartDt()),
-                    Utils.toLocalDate(request.getEndDt()),
-                    request.getFrom(),request.getTo(), Utils.toLocalDate(request.getDoj()),
-                    request.getJourneyClass(), bookingStatus, Timestamp.from(Instant.now()),
-                    seatNumber));
+                                                        request.getTrainNo(), Utils.toLocalDate(request.getStartDt()),
+                                                        Utils.toLocalDate(request.getEndDt()), request.getFrom(),
+                                                        request.getTo(), Utils.toLocalDate(request.getDoj()),
+                                                        request.getBookingType(),request.getJourneyClass(),bookingStatus,
+                                                        Timestamp.from(Instant.now()), seatNumber));
 
             int pnrNo = bkng.getPnr();
 
