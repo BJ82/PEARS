@@ -51,6 +51,8 @@ public class Booking {
                    String to, LocalDate dtOfJourny, JourneyClass journeyClass,
                    BookingStatus bookingStatus, Timestamp timestamp, int seatNo,Berth berth) {
 
+
+
         this.name = name;
         this.age = age;
         this.sex = sex;
@@ -60,6 +62,7 @@ public class Booking {
         this.startFrom = startFrom;
         this.endAt = to;
         this.dtOfJourny = dtOfJourny;
+        this.bookingType = bookingType;
         this.journeyClass = journeyClass;
         this.bookingStatus = bookingStatus;
         this.timestamp = timestamp;

@@ -51,13 +51,17 @@ public interface BookingRepository extends JpaRepository<Booking,Integer> {
            "WHERE b.startFrom = :frm AND b.endAt = :to " +
            "AND b.trainNo = :trainNo " +
            "AND b.journeyClass = :jrnyClass " +
+           "AND b.bookingType = :bookingType " +
+           "AND b.bookingStatus = :bookingStatus " +
            "AND b.startDt = :strtDt " +
            "AND b.endDt = :endDt " +
            "AND b.seatNo != 0")
     List<Integer> findSeatNumbers(@Param("frm") String startFrom,@Param("to") String endAt,
-                                     @Param("trainNo") int trainNo,@Param("strtDt") LocalDate strtDt,
-                                     @Param("endDt") LocalDate endDt,
-                                     @Param("jrnyClass") JourneyClass jrnyClass );
+                                  @Param("trainNo") int trainNo,@Param("strtDt") LocalDate strtDt,
+                                  @Param("endDt") LocalDate endDt,
+                                  @Param("jrnyClass") JourneyClass jrnyClass,
+                                  @Param("bookingType") String bookingType,
+                                  @Param("bookingStatus") BookingStatus status);
 
 
 
@@ -77,13 +81,11 @@ public interface BookingRepository extends JpaRepository<Booking,Integer> {
 
     @Query("SELECT COUNT(*) FROM Booking b " +
             "WHERE b.trainNo = :trainNo " +
-            "AND b.journeyClass = :jrnyClass " +
             "AND b.startDt = :strtDt " +
             "AND b.endDt = :endDt " +
             "AND b.bookingType = :bookingType " +
             "AND b.bookingStatus = :bookingStatus")
     int findCountOfSeatByTypeAndStatus(@Param("trainNo") int trainNo,
-                                       @Param("jrnyClass") JourneyClass jrnyClass,
                                        @Param("strtDt") LocalDate strtDt,
                                        @Param("endDt") LocalDate endDt,
                                        @Param("bookingType") String bookingType,

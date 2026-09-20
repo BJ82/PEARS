@@ -63,10 +63,14 @@ public class SeatServiceImpl implements SeatService {
         lstAllotedSeatNum = new AtomicInteger(getLastAllocatedSeatNo(request));
 
 
-        int totalSeats = totalSeatsByType.getTotal().get(request.getBookingType());
-        int confirmedSeats = bookingRepo.findCountOfSeatByTypeAndStatus(request.getTrainNo(),request.getJourneyClass(),
-                                                                             Utils.toLocalDate(request.getStartDt()),Utils.toLocalDate(request.getEndDt()),
-                                                                             request.getBookingType(),BookingStatus.CONFIRMED
+        int totalSeats = 0;
+
+        if(totalSeatsByType.getTotal().containsKey(request.getBookingType()))
+             totalSeats = totalSeatsByType.getTotal().get(request.getBookingType());
+
+        int confirmedSeats = bookingRepo.findCountOfSeatByTypeAndStatus(request.getTrainNo(),Utils.toLocalDate(request.getStartDt()),
+                                                                        Utils.toLocalDate(request.getEndDt()),
+                                                                        request.getBookingType(),BookingStatus.CONFIRMED
                                                                         );
         int seatsAvailable = totalSeats - confirmedSeats;
 
@@ -112,12 +116,13 @@ public class SeatServiceImpl implements SeatService {
 
     }
 
-    public List<Integer> getSeatNumbers(String startFrom, String endAt, BookingRequest request){
+    public List<Integer> getConfirmedSeatNumbers(String startFrom, String endAt, BookingRequest request){
 
         return bookingRepo.findSeatNumbers(startFrom,endAt,request.getTrainNo(),
-                Utils.toLocalDate(request.getStartDt()),
-                Utils.toLocalDate(request.getEndDt()),
-                request.getJourneyClass());
+                                           Utils.toLocalDate(request.getStartDt()),
+                                           Utils.toLocalDate(request.getEndDt()),
+                                           request.getJourneyClass(),request.getBookingType(),
+                                           BookingStatus.CONFIRMED);
     }
 
 
@@ -181,7 +186,7 @@ public class SeatServiceImpl implements SeatService {
 
                 dest = allStations.get(j);
 
-                seatNums.addAll(getSeatNumbers(src,dest,request));
+                seatNums.addAll(getConfirmedSeatNumbers(src,dest,request));
 
             }
         }
@@ -257,7 +262,7 @@ public class SeatServiceImpl implements SeatService {
 
                 dest = allStations.get(j);
 
-                seatNums.addAll(getSeatNumbers(src,dest,request));
+                seatNums.addAll(getConfirmedSeatNumbers(src,dest,request));
             }
         }
 
