@@ -216,9 +216,7 @@ public class BookingServiceImpl implements BookingService {
                                                         request.getBookingType(),request.getJourneyClass(),bookingStatus,
                                                         Timestamp.from(Instant.now()), seatNumber));
 
-            int pnrNo = bkng.getPnr();
-
-            pnrs.add(i,pnrNo);
+            pnrs.add(i,bkng.getPnr());
 
             i++;
 
