@@ -222,9 +222,7 @@ public class BookingServiceImpl implements BookingService {
                                                         seatNumber,berth));
 
 
-            int pnrNo = bkng.getPnr();
-
-            pnrs.add(i,pnrNo);
+            pnrs.add(i,bkng.getPnr());
 
 
             i++;
