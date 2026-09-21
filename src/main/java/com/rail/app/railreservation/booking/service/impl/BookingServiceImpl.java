@@ -181,11 +181,8 @@ public class BookingServiceImpl implements BookingService {
                     new TrainNotFoundException("No Train Found For Date Of Journey: "+dateOfJourney.toString()));
 
 
-
-
         logger.info("Processing Ticket Booking For TrainNo:{}, StartDate:{}, EndDate:{}",
                 request.getTrainNo(),request.getStartDt(),request.getEndDt());
-
 
         seatNumbers.clear();
         seatNumbers.addAll(seatService.getAvailableSeatNumbers(request));
@@ -194,12 +191,15 @@ public class BookingServiceImpl implements BookingService {
 
         int seatCount = seatService.getCountOfConfirmedSeats(request);
         int seatNumber = 0;
-        BookingStatus bookingStatus = BookingStatus.CONFIRMED;
-
         int lastSeatNumber = 0;
         int i = 0;
+
+        BookingStatus bookingStatus;
+
         for (Passenger psngr : request.getPassengers()) {
 
+            seatNumber = 0;
+            bookingStatus = BookingStatus.WAITING;
 
             if(i < seatNumbers.size()){
 
@@ -208,12 +208,6 @@ public class BookingServiceImpl implements BookingService {
                 bookingStatus = BookingStatus.CONFIRMED;
                 seatCount++;
             }
-            else {
-
-                seatNumber = 0;
-                bookingStatus = BookingStatus.WAITING;
-            }
-
 
             Booking bkng =  bookingRepo.save(new Booking(psngr.getName(), psngr.getAge(), psngr.getSex(),
                                                         request.getTrainNo(), Utils.toLocalDate(request.getStartDt()),
@@ -239,40 +233,55 @@ public class BookingServiceImpl implements BookingService {
 
         seatService.trackCountOfSeats(request,seatCount);
 
+        logger.info("Completed Ticket Booking For TrainNo:{}, StartDate:{}, EndDate:{}",
+                request.getTrainNo(),request.getStartDt(),request.getEndDt());
+
+        return getBookingResponse(request,seatNumbers,pnrs);
+
+    }
+
+    private BookingResponse getBookingResponse(BookingRequest request,Set<Integer> seatNumbers, List<Integer> pnrs){
+
         BookingResponse bookingResponse = mapper.map(request, BookingResponse.class);
+
+        List<BookedPassenger> bookedPassengers = toBookedPassenger(request.getPassengers(),seatNumbers,pnrs);
+
+        bookingResponse.getPassengerList().addAll(bookedPassengers);
         bookingResponse.setBookingDateTime(Timestamp.from(Instant.now()));
 
-        BookedPassenger bookedPassenger;
+        return bookingResponse;
+    }
 
-        int noOfPsngr = request.getPassengers().size();
+    private List<BookedPassenger> toBookedPassenger(List<Passenger> passengers,Set<Integer> seatNumbers, List<Integer> pnrs){
+
+        int seatNumber = 0;
+        BookingStatus bookingStatus;
+
+        List<BookedPassenger> bookedPassengers = new ArrayList<>();
+
+        BookedPassenger bookedPassenger;
+        int noOfPsngr = passengers.size();
 
         for(int j=0;j<noOfPsngr;j++){
 
-            bookedPassenger = mapper.map(request.getPassengers().get(j),BookedPassenger.class);
+            seatNumber = 0;
+            bookingStatus = BookingStatus.WAITING;
 
             if(j < seatNumbers.size()){
 
                 seatNumber = new ArrayList<>(seatNumbers).get(j);
                 bookingStatus = BookingStatus.CONFIRMED;
             }
-            else {
 
-                seatNumber = 0;
-                bookingStatus = BookingStatus.WAITING;
-            }
-
+            bookedPassenger = mapper.map(passengers.get(j),BookedPassenger.class);
             bookedPassenger.setPnr(pnrs.get(j));
             bookedPassenger.setSeatNo(seatNumber);
             bookedPassenger.setStatus(bookingStatus);
 
-            bookingResponse.getPassengerList().add(bookedPassenger);
-
+            bookedPassengers.add(bookedPassenger);
         }
 
-        logger.info("Completed Ticket Booking For TrainNo:{}, StartDate:{}, EndDate:{}",
-                request.getTrainNo(),request.getStartDt(),request.getEndDt());
-        return bookingResponse;
-
+        return bookedPassengers;
     }
 
     public String cancelBooking(int pnrNo) throws PnrNoIncorrectException{
