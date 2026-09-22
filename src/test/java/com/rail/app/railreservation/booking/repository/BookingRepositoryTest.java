@@ -2,6 +2,7 @@ package com.rail.app.railreservation.booking.repository;
 
 import com.rail.app.railreservation.booking.entity.Booking;
 import com.rail.app.railreservation.booking.enums.BookingStatus;
+import com.rail.app.railreservation.trainmanagement.enums.Berth;
 import com.rail.app.railreservation.trainmanagement.enums.JourneyClass;
 import jakarta.persistence.EntityManager;
 import org.junit.jupiter.api.BeforeEach;
@@ -48,20 +49,20 @@ class BookingRepositoryTest {
 
          booking1 = new Booking("FirstName",24,"M",1,startDate,endDate,
                 "stn1","stn5",startDate.plusDays(1),JourneyClass.AC1,
-                BookingStatus.CONFIRMED, Timestamp.valueOf(LocalDateTime.now()),1);
+                BookingStatus.CONFIRMED, Timestamp.valueOf(LocalDateTime.now()),1, Berth.LOWER);
 
         bookingRepo.save(booking1);
 
 
          booking2 = new Booking("SecondName",25,"M",1,startDate,endDate,
                 "stn1","stn5",startDate.plusDays(1),JourneyClass.AC1,
-                BookingStatus.WAITING, Timestamp.valueOf(LocalDateTime.now()),0);
+                BookingStatus.WAITING, Timestamp.valueOf(LocalDateTime.now()),0,Berth.UNASSIGNED);
 
         bookingRepo.save(booking2);
 
         booking3 = new Booking("ThirdName",24,"M",1,startDate,endDate,
                 "stn5","stn7",startDate.plusDays(1),JourneyClass.AC1,
-                BookingStatus.CONFIRMED, Timestamp.valueOf(LocalDateTime.now()),1);
+                BookingStatus.CONFIRMED, Timestamp.valueOf(LocalDateTime.now()),1,Berth.MIDDLE);
 
         bookingRepo.save(booking3);
 

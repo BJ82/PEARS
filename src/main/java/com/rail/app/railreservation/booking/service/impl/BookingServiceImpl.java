@@ -16,6 +16,7 @@ import com.rail.app.railreservation.enquiry.exception.TrainNotFoundException;
 import com.rail.app.railreservation.route.entity.Route;
 import com.rail.app.railreservation.route.service.RouteService;
 import com.rail.app.railreservation.trainmanagement.entity.Train;
+import com.rail.app.railreservation.trainmanagement.enums.Berth;
 import com.rail.app.railreservation.trainmanagement.enums.JourneyClass;
 import com.rail.app.railreservation.trainmanagement.exception.TimeTableNotFoundException;
 import com.rail.app.railreservation.trainmanagement.service.TrainArrivalDateService;
@@ -123,6 +124,7 @@ public class BookingServiceImpl implements BookingService {
 
         int lastSeatNumber = 0;
         int i = 0;
+        Berth berth = Berth.UNASSIGNED;
         for (Passenger psngr : request.getPassengers()) {
 
 
@@ -131,6 +133,7 @@ public class BookingServiceImpl implements BookingService {
                 seatNumber = new ArrayList<>(seatNumbers).get(i);
                 lastSeatNumber = seatNumber;
                 bookingStatus = BookingStatus.CONFIRMED;
+                berth = getBerth(request.getTrainNo(),seatNumber,request.getJourneyClass());
                 seatCount++;
             }
             else {
@@ -139,17 +142,17 @@ public class BookingServiceImpl implements BookingService {
                 bookingStatus = BookingStatus.WAITING;
             }
 
-
             Booking bkng =  bookingRepo.save(new Booking(psngr.getName(), psngr.getAge(), psngr.getSex(),
                     request.getTrainNo(), Utils.toLocalDate(request.getStartDt()),
                     Utils.toLocalDate(request.getEndDt()),
                     request.getFrom(),request.getTo(), Utils.toLocalDate(request.getDoj()),
                     request.getJourneyClass(), bookingStatus, Timestamp.from(Instant.now()),
-                    seatNumber));
+                    seatNumber,berth));
 
             int pnrNo = bkng.getPnr();
 
             pnrs.add(i,pnrNo);
+
 
             i++;
 
@@ -189,7 +192,7 @@ public class BookingServiceImpl implements BookingService {
             bookedPassenger.setPnr(pnrs.get(j));
             bookedPassenger.setSeatNo(seatNumber);
             bookedPassenger.setStatus(bookingStatus);
-
+            bookedPassenger.setBerth(berth);
             bookingResponse.getPassengerList().add(bookedPassenger);
 
         }
@@ -200,6 +203,15 @@ public class BookingServiceImpl implements BookingService {
 
     }
 
+    private Berth getBerth(int trainNo,int seatNo,JourneyClass journeyClass) {
+
+        Train trn = trainService.getTrainByNo(trainNo).get();
+        Berth berth = trn.getSeats().stream().filter((s)->s.getSeatNo() == seatNo
+                                                     && s.getJourneyClass().equals(journeyClass)
+                                                  ).findFirst().get().getBerth();
+         return berth;
+
+    }
     public String cancelBooking(int pnrNo) throws PnrNoIncorrectException{
 
         Booking bookingToCancel = getBookingByPnrNo(pnrNo)

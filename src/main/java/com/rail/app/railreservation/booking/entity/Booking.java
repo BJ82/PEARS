@@ -1,6 +1,7 @@
 package com.rail.app.railreservation.booking.entity;
 
 import com.rail.app.railreservation.booking.enums.BookingStatus;
+import com.rail.app.railreservation.trainmanagement.enums.Berth;
 import com.rail.app.railreservation.trainmanagement.enums.JourneyClass;
 import jakarta.persistence.*;
 import lombok.Getter;
@@ -41,10 +42,13 @@ public class Booking {
     private Timestamp timestamp;
     private int seatNo;
 
+    @Enumerated(EnumType.STRING)
+    private Berth berth;
+
     public Booking(String name, int age, String sex, int trainNo,
                    LocalDate startDt, LocalDate endDt, String startFrom,
                    String to, LocalDate dtOfJourny, JourneyClass journeyClass,
-                   BookingStatus bookingStatus, Timestamp timestamp, int seatNo) {
+                   BookingStatus bookingStatus, Timestamp timestamp, int seatNo,Berth berth) {
 
         this.name = name;
         this.age = age;
@@ -59,5 +63,6 @@ public class Booking {
         this.bookingStatus = bookingStatus;
         this.timestamp = timestamp;
         this.seatNo = seatNo;
+        this.berth = berth;
     }
 }
