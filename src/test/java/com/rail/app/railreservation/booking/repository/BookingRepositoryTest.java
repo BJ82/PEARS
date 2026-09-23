@@ -47,20 +47,20 @@ class BookingRepositoryTest {
         endDate = startDate.plusDays(2);
 
          booking1 = new Booking("FirstName",24,"M",1,startDate,endDate,
-                "stn1","stn5",startDate.plusDays(1),JourneyClass.AC1,
+                "stn1","stn5",startDate.plusDays(1),"general",JourneyClass.AC1,
                 BookingStatus.CONFIRMED, Timestamp.valueOf(LocalDateTime.now()),1);
 
         bookingRepo.save(booking1);
 
 
          booking2 = new Booking("SecondName",25,"M",1,startDate,endDate,
-                "stn1","stn5",startDate.plusDays(1),JourneyClass.AC1,
+                "stn1","stn5",startDate.plusDays(1),"general",JourneyClass.AC1,
                 BookingStatus.WAITING, Timestamp.valueOf(LocalDateTime.now()),0);
 
         bookingRepo.save(booking2);
 
         booking3 = new Booking("ThirdName",24,"M",1,startDate,endDate,
-                "stn5","stn7",startDate.plusDays(1),JourneyClass.AC1,
+                "stn5","stn7",startDate.plusDays(1),"general",JourneyClass.AC1,
                 BookingStatus.CONFIRMED, Timestamp.valueOf(LocalDateTime.now()),1);
 
         bookingRepo.save(booking3);
@@ -126,7 +126,8 @@ class BookingRepositoryTest {
 
          //when
 
-        List<Integer> seatNums = bookingRepo.findSeatNumbers(startFrom,endAt,trainNo,strtDt,endDt,jrnyClass);
+        List<Integer> seatNums = bookingRepo.findSeatNumbers(startFrom,endAt,trainNo,strtDt,
+                                                endDt,jrnyClass,"general",BookingStatus.CONFIRMED);
 
         List<Booking> bookings = new ArrayList<>();
         seatNums.stream().forEach((seatNo)->bookings.addAll(
