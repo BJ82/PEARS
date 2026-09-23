@@ -7,6 +7,7 @@ import com.rail.app.railreservation.booking.enums.BookingStatus;
 import com.rail.app.railreservation.booking.exception.BookingCannotOpenException;
 import com.rail.app.railreservation.booking.exception.BookingNotOpenException;
 import com.rail.app.railreservation.booking.exception.InvalidBookingException;
+import com.rail.app.railreservation.booking.exception.TatkalNotOpenException;
 import com.rail.app.railreservation.booking.repository.BookingOpenRepository;
 import com.rail.app.railreservation.booking.repository.BookingRepository;
 import com.rail.app.railreservation.booking.service.impl.BookingServiceImpl;
@@ -106,7 +107,7 @@ class BookingServiceTest {
         String doj = startDate.plusDays(1).format(pattern);
 
         bookingRequest = new BookingRequest(1,"TRAIN1",startDate.format(pattern),
-                endDate.format(pattern),from,to, JourneyClass.AC1,doj,passengers);
+                endDate.format(pattern),from,to, JourneyClass.AC1,"general",doj,passengers);
 
         route = new Route();
         route.setRouteID(1);
@@ -133,7 +134,7 @@ class BookingServiceTest {
         when(trainService.getTrainByNo(1)).thenReturn(Optional.empty());
 
         //then
-        assertThrows(InvalidBookingException.class,()-> bookingServiceUnderTest.book(bookingRequest));
+        assertThrows(InvalidBookingException.class,()-> bookingServiceUnderTest.bookTicket(bookingRequest));
 
     }
 
@@ -160,7 +161,7 @@ class BookingServiceTest {
                 bookingRequest.getTo(),route)).thenReturn(false);
 
         //then
-        assertThrows(InvalidBookingException.class,()-> bookingServiceUnderTest.book(bookingRequest));
+        assertThrows(InvalidBookingException.class,()-> bookingServiceUnderTest.bookTicket(bookingRequest));
 
 
     }
@@ -184,7 +185,7 @@ class BookingServiceTest {
         //when(bookingService.isBookingOpen(bookingRequest)).thenReturn(Optional.empty());
 
         //then
-        assertThrows(BookingNotOpenException.class,()-> bookingServiceUnderTest.book(bookingRequest));
+        assertThrows(BookingNotOpenException.class,()-> bookingServiceUnderTest.bookTicket(bookingRequest));
 
     }
 
@@ -212,12 +213,12 @@ class BookingServiceTest {
                 .thenReturn(LocalDate.now());
 
         //then
-        assertThrows(InvalidBookingException.class,()->bookingServiceUnderTest.book(bookingRequest));
+        assertThrows(InvalidBookingException.class,()->bookingServiceUnderTest.bookTicket(bookingRequest));
 
     }
 
     @Test
-    void testBookingConfirmed() throws TimeTableNotFoundException, InvalidBookingException, BookingNotOpenException {
+    void testBookingConfirmed() throws TimeTableNotFoundException, InvalidBookingException, BookingNotOpenException, TatkalNotOpenException {
 
         //given
 
@@ -260,7 +261,8 @@ class BookingServiceTest {
                                         bookingRequest.getTo(),Utils.toLocalDate(bookingRequest.getDoj()),
                                         bookingRequest.getJourneyClass(),BookingStatus.CONFIRMED,Timestamp.from(Instant.now()),4,
                                         Berth.UPPER
-                                );
+                                 );
+
 
         when(bookingRepo.save(any(Booking.class))).thenReturn(b1,b2,b3);
         when(booking.getPnr()).thenReturn(1,2,3);
@@ -271,7 +273,7 @@ class BookingServiceTest {
         doNothing().when(seatService)
                 .trackCountOfSeats(bookingRequest,4);
 
-        BookingResponse bookingResponse = bookingServiceUnderTest.book(bookingRequest);
+        BookingResponse bookingResponse = bookingServiceUnderTest.bookTicket(bookingRequest);
 
         //then
 
@@ -285,7 +287,7 @@ class BookingServiceTest {
     }
 
     @Test
-    void testBookingWaiting() throws InvalidBookingException, TimeTableNotFoundException, BookingNotOpenException {
+    void testBookingWaiting() throws InvalidBookingException, TimeTableNotFoundException, BookingNotOpenException, TatkalNotOpenException {
 
         //given
 
@@ -312,19 +314,21 @@ class BookingServiceTest {
         when(seatService.getCountOfConfirmedSeats(bookingRequest)).thenReturn(2);
 
         Booking b1 = new Booking("First Passenger",24,"M",1,startDate,endDate,bookingRequest.getFrom(),
-                bookingRequest.getTo(),Utils.toLocalDate(bookingRequest.getDoj()),
-                bookingRequest.getJourneyClass(),BookingStatus.CONFIRMED,Timestamp.from(Instant.now()),3,Berth.LOWER
-        );
+                                bookingRequest.getTo(),Utils.toLocalDate(bookingRequest.getDoj()),
+                                bookingRequest.getJourneyClass(),BookingStatus.CONFIRMED,Timestamp.from(Instant.now()),3,Berth.LOWER
+                                 );
 
         Booking b2 = new Booking("Second Passenger",25,"F",1,startDate,endDate,bookingRequest.getFrom(),
-                bookingRequest.getTo(),Utils.toLocalDate(bookingRequest.getDoj()),
-                bookingRequest.getJourneyClass(),BookingStatus.CONFIRMED,Timestamp.from(Instant.now()),4,Berth.MIDDLE
-        );
+                                bookingRequest.getTo(),Utils.toLocalDate(bookingRequest.getDoj()),
+                                bookingRequest.getJourneyClass(),BookingStatus.CONFIRMED,Timestamp.from(Instant.now()),4,Berth.MIDDLE
+                               );
 
         Booking b3 = new Booking("Third Passenger",26,"F",1,startDate,endDate,bookingRequest.getFrom(),
-                bookingRequest.getTo(),Utils.toLocalDate(bookingRequest.getDoj()),
-                bookingRequest.getJourneyClass(),BookingStatus.WAITING,Timestamp.from(Instant.now()),0,Berth.SIDE_UPPER
-        );
+                                bookingRequest.getTo(),Utils.toLocalDate(bookingRequest.getDoj()),
+                                bookingRequest.getJourneyClass(),BookingStatus.WAITING,Timestamp.from(Instant.now()),0,Berth.SIDE_UPPER
+
+                                );
+
 
         when(bookingRepo.save(any(Booking.class))).thenReturn(b1,b2,b3);
         when(booking.getPnr()).thenReturn(1,2,3);
@@ -335,7 +339,7 @@ class BookingServiceTest {
         doNothing().when(seatService)
                 .trackCountOfSeats(bookingRequest,4);
 
-        BookingResponse bookingResponse = bookingServiceUnderTest.book(bookingRequest);
+        BookingResponse bookingResponse = bookingServiceUnderTest.bookTicket(bookingRequest);
 
         //then
 
@@ -355,8 +359,10 @@ class BookingServiceTest {
 
         //given
         Booking bookingToCancel = new Booking("First Passenger",24,"M",1,
-                startDate,endDate,"stn1","stn5",startDate.plusDays(1),JourneyClass.AC1,
-                BookingStatus.WAITING, Timestamp.from(Instant.now()),0,Berth.UNASSIGNED);
+                                               startDate,endDate,"stn1","stn5",startDate.plusDays(1),JourneyClass.AC1,
+                                               BookingStatus.WAITING, Timestamp.from(Instant.now()),0,Berth.UNASSIGNED
+                                             );
+
 
         int pnrNo = 1;
 
@@ -383,15 +389,17 @@ class BookingServiceTest {
         List<Booking> allBookings = new ArrayList<>();
 
         Booking bookingToCancel = new Booking("First Passenger",24,"M",1,
-                startDate,endDate,"stn1","stn3",startDate.plusDays(1),JourneyClass.AC1,
-                BookingStatus.CONFIRMED, Timestamp.from(Instant.now()),2,Berth.UPPER);
+                                               startDate,endDate,"stn1","stn3",startDate.plusDays(1),JourneyClass.AC1,
+                                              BookingStatus.CONFIRMED, Timestamp.from(Instant.now()),2,Berth.UPPER);
+
         bookingToCancel.setPnr(3);
 
         allBookings.add(bookingToCancel);
 
         Booking bookingWithSharedSeatNo = new Booking("Third Passenger",27,"M",1,
-                startDate,endDate,"stn3","stn5",startDate.plusDays(1),JourneyClass.AC1,
-                BookingStatus.CONFIRMED, Timestamp.from(Instant.now()),2,Berth.SIDE_UPPER);
+                                                      startDate,endDate,"stn3","stn5",startDate.plusDays(1),JourneyClass.AC1,
+                                                       BookingStatus.CONFIRMED, Timestamp.from(Instant.now()),2,Berth.SIDE_UPPER);
+
         bookingWithSharedSeatNo.setPnr(4);
 
         allBookings.add(bookingWithSharedSeatNo);
@@ -453,15 +461,16 @@ class BookingServiceTest {
         List<Booking> waitingList = new ArrayList<>();
 
         Booking booking1 =  new Booking("First Passenger",24,"M",1,
-                startDate,endDate,"stn1","stn5",startDate.plusDays(1),JourneyClass.AC1,
-                BookingStatus.WAITING, Timestamp.from(Instant.now()),0,Berth.UNASSIGNED);
+                                        startDate,endDate,"stn1","stn5",startDate.plusDays(1),JourneyClass.AC1,
+                                        BookingStatus.WAITING, Timestamp.from(Instant.now()),0,Berth.UNASSIGNED);
+
 
         booking1.setPnr(1);
         waitingList.add(booking1);
 
         Booking booking2 =  new Booking("Second Passenger",24,"F",1,
-                startDate,endDate,"stn1","stn2",startDate.plusDays(1),JourneyClass.AC1,
-                BookingStatus.WAITING, Timestamp.from(Instant.now()),0,Berth.UNASSIGNED);
+                                        startDate,endDate,"stn1","stn2",startDate.plusDays(1),JourneyClass.AC1,
+                                        BookingStatus.WAITING, Timestamp.from(Instant.now()),0,Berth.UNASSIGNED);
 
         booking2.setPnr(2);
         waitingList.add(booking2);

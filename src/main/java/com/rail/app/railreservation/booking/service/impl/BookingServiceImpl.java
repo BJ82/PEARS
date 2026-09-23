@@ -26,6 +26,7 @@ import com.rail.app.railreservation.util.Utils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.modelmapper.ModelMapper;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.sql.Timestamp;
@@ -57,6 +58,13 @@ public class BookingServiceImpl implements BookingService {
 
     private final SeatService seatService;
     private final ModelMapper mapper;
+
+    @Value("${tatkal.start.time}")
+    private String tatkalStartTime;
+
+    @Value("${tatkal.end.time}")
+    private String tatkalEndTime;
+
 
     public BookingServiceImpl(TrainService trainService,
                           RouteService routeService,
@@ -116,15 +124,15 @@ public class BookingServiceImpl implements BookingService {
 
         boolean isTatkalOpen = false;
 
-        LocalTime tatkalStartTime  = LocalTime.of(10,0,0);
-        LocalTime tatkalEndTime  = LocalTime.of(11,0,0);
+        LocalTime tatkalStart = Utils.toLocalTime(tatkalStartTime);
+        LocalTime tatkalEnd  = Utils.toLocalTime(tatkalEndTime);
 
         LocalTime now = LocalTime.now();
 
         LocalDate dojMinusOneDay = doj.minusDays(1);
 
         if(LocalDate.now().equals(dojMinusOneDay)){
-            if(now.equals(tatkalStartTime) || (now.isAfter(tatkalStartTime) && now.isBefore(tatkalEndTime))){
+            if(now.equals(tatkalStart) || (now.isAfter(tatkalStart) && now.isBefore(tatkalEnd))){
                 isTatkalOpen = true;
             }
         }
@@ -135,17 +143,34 @@ public class BookingServiceImpl implements BookingService {
     private BookingResponse bookLadies(BookingRequest request)
             throws InvalidBookingException, TimeTableNotFoundException, BookingNotOpenException{
 
+        for(Passenger p:request.getPassengers()){
+
+            if(!"F".equals(p.getSex()))
+                throw new InvalidBookingException("Only Female Passengers Allowed On Ladies Quota");
+        }
+
         return book(request);
     }
 
     private BookingResponse bookSeniorCitizen(BookingRequest request)
             throws InvalidBookingException, TimeTableNotFoundException, BookingNotOpenException{
 
+        for(Passenger p:request.getPassengers()){
+
+            if(p.getAge() < 60)
+                throw new InvalidBookingException("Age Should Be Greater Than 60 On Senior Citizen Quota");
+        }
         return book(request);
     }
 
     private BookingResponse bookChild(BookingRequest request)
             throws InvalidBookingException, TimeTableNotFoundException, BookingNotOpenException{
+
+        for(Passenger p:request.getPassengers()){
+
+            if(p.getAge() > 5)
+                throw new InvalidBookingException("Age Should Be Less Or Equal To 5 On Child Quota");
+        }
 
         return book(request);
     }
