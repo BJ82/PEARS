@@ -109,7 +109,7 @@ public class BookingServiceImpl implements BookingService {
 
         LocalDate doj = Utils.toLocalDate(request.getDoj());
 
-        if(isTatkalOpen(doj)){
+        if(isTatkalOpen(request.getTrainNo())){
 
             response = book(request);
         }
@@ -120,24 +120,40 @@ public class BookingServiceImpl implements BookingService {
       return response;
     }
 
-    private boolean isTatkalOpen(LocalDate doj){
+    public boolean isTatkalOpen(int trainNo){
 
         boolean isTatkalOpen = false;
 
+        logger.info("TATKAL START TIME: {}",tatkalStartTime);
         LocalTime tatkalStart = Utils.toLocalTime(tatkalStartTime);
+        logger.info("TATKAL END TIME: {}",tatkalEndTime);
         LocalTime tatkalEnd  = Utils.toLocalTime(tatkalEndTime);
 
+        LocalDate trainOriginStartDt = getTrainOriginStartDate(trainNo);
+        LocalDate trainOriginStartDtMinusOneDay = trainOriginStartDt.minusDays(1);
+
         LocalTime now = LocalTime.now();
-
-        LocalDate dojMinusOneDay = doj.minusDays(1);
-
-        if(LocalDate.now().equals(dojMinusOneDay)){
+        if(LocalDate.now().equals(trainOriginStartDtMinusOneDay)){
             if(now.equals(tatkalStart) || (now.isAfter(tatkalStart) && now.isBefore(tatkalEnd))){
                 isTatkalOpen = true;
             }
         }
 
         return isTatkalOpen;
+    }
+
+    private LocalDate getTrainOriginStartDate(int trainNo){
+
+        LocalDate startDt = null;
+        for(BookingOpen bookingOpen:bookingOpenRepo.findByTrainNo(trainNo)){
+
+            if(LocalDate.now().isBefore(bookingOpen.getStartDt())){
+                startDt =  bookingOpen.getStartDt();
+                break;
+            }
+        }
+
+        return startDt;
     }
 
     private BookingResponse bookLadies(BookingRequest request)

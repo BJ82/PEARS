@@ -29,6 +29,8 @@ public interface BookingService {
 
     public Optional<Boolean> isBookingOpen(BookingRequest request);
 
+    public boolean isTatkalOpen(int trainNo);
+
     public List<BookingOpen> getBookingOpenInfoByTrainNo(int trainNo);
 
     public List<Booking> getBookingBySeatNumber(int seatNumber,Booking booking);
