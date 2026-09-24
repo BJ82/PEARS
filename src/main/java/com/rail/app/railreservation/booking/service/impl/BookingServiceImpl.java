@@ -236,12 +236,13 @@ public class BookingServiceImpl implements BookingService {
         int lastSeatNumber = 0;
         int i = 0;
 
-        Berth berth = Berth.UNASSIGNED;
-        
+        Berth berth;
+        List<Berth> berths = new ArrayList<>();
         BookingStatus bookingStatus;
 
         for (Passenger psngr : request.getPassengers()) {
 
+            berth = Berth.UNASSIGNED;
             seatNumber = 0;
             bookingStatus = BookingStatus.WAITING;
 
@@ -250,7 +251,8 @@ public class BookingServiceImpl implements BookingService {
                 seatNumber = new ArrayList<>(seatNumbers).get(i);
                 lastSeatNumber = seatNumber;
                 bookingStatus = BookingStatus.CONFIRMED;
-                berth = getBerth(request.getTrainNo(),seatNumber,request.getJourneyClass());
+                berths.add(getBerth(request.getTrainNo(),seatNumber,request.getJourneyClass()));
+                berth = berths.get(i);
                 seatCount++;
             }
 
@@ -259,7 +261,7 @@ public class BookingServiceImpl implements BookingService {
                                                         request.getTrainNo(), Utils.toLocalDate(request.getStartDt()),
                                                         Utils.toLocalDate(request.getEndDt()),
                                                         request.getFrom(),request.getTo(), Utils.toLocalDate(request.getDoj()),
-                                                        request.getJourneyClass(), bookingStatus, Timestamp.from(Instant.now()),
+                                                        request.getBookingType(),request.getJourneyClass(), bookingStatus, Timestamp.from(Instant.now()),
                                                         seatNumber,berth));
 
 
@@ -282,15 +284,15 @@ public class BookingServiceImpl implements BookingService {
         logger.info("Completed Ticket Booking For TrainNo:{}, StartDate:{}, EndDate:{}",
                 request.getTrainNo(),request.getStartDt(),request.getEndDt());
 
-        return getBookingResponse(request,seatNumbers,pnrs);
+        return getBookingResponse(request,seatNumbers,pnrs,berths);
 
     }
 
-    private BookingResponse getBookingResponse(BookingRequest request,Set<Integer> seatNumbers, List<Integer> pnrs){
+    private BookingResponse getBookingResponse(BookingRequest request,Set<Integer> seatNumbers,List<Integer> pnrs,List<Berth> berths){
 
         BookingResponse bookingResponse = mapper.map(request, BookingResponse.class);
 
-        List<BookedPassenger> bookedPassengers = toBookedPassenger(request.getPassengers(),seatNumbers,pnrs);
+        List<BookedPassenger> bookedPassengers = toBookedPassenger(request.getPassengers(),seatNumbers,pnrs,berths);
 
         bookingResponse.getPassengerList().addAll(bookedPassengers);
         bookingResponse.setBookingDateTime(Timestamp.from(Instant.now()));
@@ -298,25 +300,28 @@ public class BookingServiceImpl implements BookingService {
         return bookingResponse;
     }
 
-    private List<BookedPassenger> toBookedPassenger(List<Passenger> passengers,Set<Integer> seatNumbers, List<Integer> pnrs){
+    private List<BookedPassenger> toBookedPassenger(List<Passenger> passengers,Set<Integer> seatNumbers,List<Integer> pnrs,List<Berth> berths){
 
         int seatNumber = 0;
         BookingStatus bookingStatus;
 
         List<BookedPassenger> bookedPassengers = new ArrayList<>();
 
+        Berth berth;
         BookedPassenger bookedPassenger;
         int noOfPsngr = passengers.size();
 
         for(int j=0;j<noOfPsngr;j++) {
 
             seatNumber = 0;
+            berth = Berth.UNASSIGNED;
             bookingStatus = BookingStatus.WAITING;
 
             if (j < seatNumbers.size()) {
 
                 seatNumber = new ArrayList<>(seatNumbers).get(j);
                 bookingStatus = BookingStatus.CONFIRMED;
+                berth = berths.get(j);
             }
 
             bookedPassenger = mapper.map(passengers.get(j), BookedPassenger.class);

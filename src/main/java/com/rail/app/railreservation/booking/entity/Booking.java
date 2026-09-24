@@ -48,7 +48,7 @@ public class Booking {
 
     public Booking(String name, int age, String sex, int trainNo,
                    LocalDate startDt, LocalDate endDt, String startFrom,
-                   String to, LocalDate dtOfJourny, JourneyClass journeyClass,
+                   String to, LocalDate dtOfJourny,String bookingType, JourneyClass journeyClass,
                    BookingStatus bookingStatus, Timestamp timestamp, int seatNo,Berth berth) {
 
 
