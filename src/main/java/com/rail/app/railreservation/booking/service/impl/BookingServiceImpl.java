@@ -106,7 +106,7 @@ public class BookingServiceImpl implements BookingService {
     }
 
     private BookingResponse bookTatkal(BookingRequest request)
-            throws InvalidBookingException, TimeTableNotFoundException, BookingNotOpenException, TatkalNotOpenException {
+            throws TatkalNotOpenException, InvalidBookingAttemptException {
 
         BookingResponse response = null;
 
@@ -160,7 +160,7 @@ public class BookingServiceImpl implements BookingService {
     }
 
     private BookingResponse bookLadies(BookingRequest request)
-            throws InvalidBookingException, TimeTableNotFoundException, BookingNotOpenException{
+            throws InvalidBookingException,InvalidBookingAttemptException {
 
         for(Passenger p:request.getPassengers()){
 
@@ -172,7 +172,7 @@ public class BookingServiceImpl implements BookingService {
     }
 
     private BookingResponse bookSeniorCitizen(BookingRequest request)
-            throws InvalidBookingException, TimeTableNotFoundException, BookingNotOpenException{
+            throws InvalidBookingException,InvalidBookingAttemptException {
 
         for(Passenger p:request.getPassengers()){
 
@@ -183,7 +183,7 @@ public class BookingServiceImpl implements BookingService {
     }
 
     private BookingResponse bookChild(BookingRequest request)
-            throws InvalidBookingException, TimeTableNotFoundException, BookingNotOpenException{
+            throws InvalidBookingException, InvalidBookingAttemptException {
 
         for(Passenger p:request.getPassengers()){
 
@@ -194,37 +194,11 @@ public class BookingServiceImpl implements BookingService {
         return book(request);
     }
 
-    private BookingResponse book(BookingRequest request) throws InvalidBookingException, BookingNotOpenException, TimeTableNotFoundException {
+    private BookingResponse book(BookingRequest request) throws InvalidBookingAttemptException{
 
         logger.info(INSIDE_BOOKING_SERVICE);
 
-        //Check if Train No is Valid
-        Train trn = trainService.getTrainByNo(request.getTrainNo())
-                .orElseThrow(() -> new InvalidBookingException("Booking Not Allowed On Non Existent Train"));
-
-        //Check if Route is valid
-        isValidRoute(request.getFrom(), request.getTo(), trn)
-                .orElseThrow(() -> new InvalidBookingException("TrainNo:" + request.getTrainNo() + " Not Running " + "Between " +
-                        request.getFrom() + "And " + request.getTo()));
-        //Check If Booking Is Allowed
-        isBookingOpen(request).orElseThrow(()->new BookingNotOpenException("Booking Not Yet Open For TrainNo:"+request.getTrainNo()+" For Dates "+request.getStartDt()+" And "+request.getEndDt()
-                )
-        );
-
-        //Check if DOJ is Valid
-        String pssngrJournyStartStn = request.getFrom();
-
-        LocalDate trainStartDateFrmSource = Utils.toLocalDate(request.getStartDt());
-
-        LocalDate dateOfArrival =  trainArrivalDateService.getArrivalDate(request.getTrainNo(),
-                pssngrJournyStartStn,trainStartDateFrmSource);
-
-        LocalDate dateOfJourney = Utils.toLocalDate(request.getDoj());
-
-        if(!dateOfArrival.equals(dateOfJourney))
-            throw new InvalidBookingException("Invalid Booking Because ",
-                    new TrainNotFoundException("No Train Found For Date Of Journey: "+dateOfJourney.toString()));
-
+        bookingValidator.validate(request);
 
         logger.info("Processing Ticket Booking For TrainNo:{}, StartDate:{}, EndDate:{}",
                 request.getTrainNo(),request.getStartDt(),request.getEndDt());

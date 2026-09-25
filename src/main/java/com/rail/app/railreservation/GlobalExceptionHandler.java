@@ -158,6 +158,14 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(expiredJwtEx.getMessage());
     }
 
+    @ExceptionHandler(TatkalNotOpenException.class)
+    public ResponseEntity<String> tatkalNotOpenExceptionHandler(TatkalNotOpenException tatkalNotOpenException){
+
+        logger.error(tatkalNotOpenException.getMessage());
+
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(tatkalNotOpenException.getMessage());
+    }
+
     @ExceptionHandler(InvalidBookingAttemptException.class)
     public ResponseEntity<String> invlidBkngAttmptHandler(InvalidBookingAttemptException invldBkngAttmptEx){
 
