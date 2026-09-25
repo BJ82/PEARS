@@ -7,9 +7,9 @@ import com.rail.app.railreservation.booking.exception.BookingCannotOpenException
 import com.rail.app.railreservation.booking.exception.BookingNotOpenException;
 import com.rail.app.railreservation.booking.exception.InvalidBookingException;
 import com.rail.app.railreservation.booking.exception.TatkalNotOpenException;
+import com.rail.app.railreservation.booking.exception.InvalidBookingAttemptException;
 import com.rail.app.railreservation.enquiry.exception.PnrNoIncorrectException;
 import com.rail.app.railreservation.trainmanagement.enums.JourneyClass;
-import com.rail.app.railreservation.trainmanagement.exception.TimeTableNotFoundException;
 
 import java.time.LocalDate;
 import java.util.List;

@@ -7,6 +7,15 @@ public class TrainNotFoundException extends IOException {
     private String dest;
     private int trainNo;
 
+    @Override
+    public String toString() {
+        return "TrainNotFoundException{" +
+                "src='" + src + '\'' +
+                ", dest='" + dest + '\'' +
+                ", trainNo=" + trainNo +
+                '}';
+    }
+
     public String getSrc() {
         return src;
     }

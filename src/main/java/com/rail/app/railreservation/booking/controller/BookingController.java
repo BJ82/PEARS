@@ -5,19 +5,24 @@ import com.rail.app.railreservation.booking.exception.BookingCannotOpenException
 import com.rail.app.railreservation.booking.exception.BookingNotOpenException;
 import com.rail.app.railreservation.booking.exception.InvalidBookingException;
 import com.rail.app.railreservation.booking.exception.TatkalNotOpenException;
+import com.rail.app.railreservation.booking.exception.InvalidBookingAttemptException;
 import com.rail.app.railreservation.booking.service.BookingService;
+import com.rail.app.railreservation.booking.validator.ValidationSequence;
 import com.rail.app.railreservation.enquiry.exception.PnrNoIncorrectException;
-import com.rail.app.railreservation.trainmanagement.exception.TimeTableNotFoundException;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.Positive;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import java.net.URI;
 
 @RestController
+@Validated
 @RequestMapping("api/v1")
 public class BookingController {
 
@@ -34,7 +39,7 @@ public class BookingController {
     //Ideally should be idempotent.
     //Use put or patch
     @PostMapping("/booking")
-    public ResponseEntity<BookingResponse> bookTicket(@RequestBody BookingRequest bookingRequest) throws InvalidBookingException, BookingNotOpenException, TimeTableNotFoundException, TatkalNotOpenException {
+    public ResponseEntity<BookingResponse> bookTicket(@Valid @RequestBody BookingRequest bookingRequest) throws InvalidBookingAttemptException {
 
         logger.info(INSIDE_BOOKING_CONTROLLER);
         logger.info("Processing Request For Ticket Booking");
@@ -52,8 +57,8 @@ public class BookingController {
     //Ideally should be idempotent.
     //Use put or patch
     @PreAuthorize("hasRole('ROLE_ADMIN')")
-    @PostMapping("trains/{trainNo}/bookings/open")
-    public ResponseEntity<BookingOpenResponse> openBooking(@PathVariable("trainNo") int trainNo,@RequestBody BookingOpenRequest bookingOpenRequest) throws BookingCannotOpenException {
+    @PostMapping("trains/{trainNo}/booking/")
+    public ResponseEntity<BookingOpenResponse> openBooking(@PathVariable("trainNo") @Positive int trainNo, @Validated(ValidationSequence.class) @RequestBody BookingOpenRequest bookingOpenRequest) throws BookingCannotOpenException {
 
         logger.info(INSIDE_BOOKING_CONTROLLER);
         logger.info("Processing Request To Open Booking");
@@ -67,13 +72,13 @@ public class BookingController {
     }
 
     @GetMapping("trains/{trainNo}/bookings/status")
-    public ResponseEntity<BookingOpenInfo> isBookingOpen(@PathVariable("trainNo") int trainNo){
+    public ResponseEntity<BookingOpenInfo> isBookingOpen(@PathVariable("trainNo") @Positive int trainNo){
 
         return ResponseEntity.ok(bookingService.getBookingOpenInfo(trainNo));
     }
 
     @DeleteMapping("/bookings/{pnrNo}")
-    public ResponseEntity<String> cancelTicket(@PathVariable("pnrNo") int pnrNo) throws PnrNoIncorrectException {
+    public ResponseEntity<String> cancelTicket(@PathVariable("pnrNo") @Positive int pnrNo) throws PnrNoIncorrectException {
 
         return ResponseEntity.ok(bookingService.cancelBooking(pnrNo));
 
