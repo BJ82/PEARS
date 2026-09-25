@@ -18,7 +18,7 @@ import java.util.Optional;
 public interface BookingService {
 
     public BookingResponse bookTicket(BookingRequest request)
-            throws InvalidBookingException, BookingNotOpenException, TimeTableNotFoundException, TatkalNotOpenException;
+            throws InvalidBookingAttemptException, TatkalNotOpenException, InvalidBookingException;
 
     public String cancelBooking(int pnrNo) throws PnrNoIncorrectException;
 

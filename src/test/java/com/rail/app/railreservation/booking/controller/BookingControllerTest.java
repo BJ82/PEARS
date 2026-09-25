@@ -127,7 +127,7 @@ class BookingControllerTest {
                 endDate.format(pattern),true);
         when(bookingService.openBooking(trainNo,bookingOpenRequest)).thenReturn(bookingOpenResponse);
 
-        mockMvc.perform(post("/api/v1/trains/{trainNo}/bookings/open",trainNo)
+        mockMvc.perform(post("/api/v1/trains/{trainNo}/booking/",trainNo)
                         .header(HttpHeaders.AUTHORIZATION,"Bearer "+jwt)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(new ObjectMapper().writeValueAsString(bookingOpenRequest))

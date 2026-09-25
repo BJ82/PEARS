@@ -39,7 +39,7 @@ public class BookingController {
     //Ideally should be idempotent.
     //Use put or patch
     @PostMapping("/booking")
-    public ResponseEntity<BookingResponse> bookTicket(@Valid @RequestBody BookingRequest bookingRequest) throws InvalidBookingAttemptException {
+    public ResponseEntity<BookingResponse> bookTicket(@Valid @RequestBody BookingRequest bookingRequest) throws InvalidBookingAttemptException, InvalidBookingException, TatkalNotOpenException {
 
         logger.info(INSIDE_BOOKING_CONTROLLER);
         logger.info("Processing Request For Ticket Booking");

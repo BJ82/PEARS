@@ -4,14 +4,12 @@ import com.rail.app.railreservation.booking.dto.*;
 import com.rail.app.railreservation.booking.entity.Booking;
 import com.rail.app.railreservation.booking.entity.BookingOpen;
 import com.rail.app.railreservation.booking.enums.BookingStatus;
-import com.rail.app.railreservation.booking.exception.BookingCannotOpenException;
-import com.rail.app.railreservation.booking.exception.BookingNotOpenException;
-import com.rail.app.railreservation.booking.exception.InvalidBookingException;
-import com.rail.app.railreservation.booking.exception.TatkalNotOpenException;
+import com.rail.app.railreservation.booking.exception.*;
 import com.rail.app.railreservation.booking.repository.BookingOpenRepository;
 import com.rail.app.railreservation.booking.repository.BookingRepository;
 import com.rail.app.railreservation.booking.service.impl.BookingServiceImpl;
 import com.rail.app.railreservation.booking.service.impl.SeatServiceImpl;
+import com.rail.app.railreservation.booking.validator.BookingValidator;
 import com.rail.app.railreservation.enquiry.exception.PnrNoIncorrectException;
 import com.rail.app.railreservation.route.entity.Route;
 import com.rail.app.railreservation.route.service.RouteService;
@@ -20,6 +18,7 @@ import com.rail.app.railreservation.trainmanagement.entity.Train;
 import com.rail.app.railreservation.trainmanagement.enums.Berth;
 import com.rail.app.railreservation.trainmanagement.enums.JourneyClass;
 import com.rail.app.railreservation.trainmanagement.exception.TimeTableNotFoundException;
+import com.rail.app.railreservation.trainmanagement.service.TimeTableService;
 import com.rail.app.railreservation.trainmanagement.service.TrainArrivalDateService;
 import com.rail.app.railreservation.trainmanagement.service.TrainService;
 import com.rail.app.railreservation.util.Utils;
@@ -67,7 +66,11 @@ class BookingServiceTest {
 
     @Mock private TrainArrivalDateService trainArrivalDateService;
 
+    @Mock private TimeTableService timeTableService;
+
     @Mock private SeatServiceImpl seatService;
+
+    private BookingValidator bookingValidator;
     private ModelMapper mapper;
 
     private LocalDate startDate;
@@ -90,9 +93,11 @@ class BookingServiceTest {
 
         mapper = new ModelMapper();
 
+        bookingValidator = new BookingValidator(trainService,routeService,bookingOpenRepo,timeTableService,trainArrivalDateService);
+
         bookingServiceUnderTest = new BookingServiceForTest(trainService, routeService,
-                bookingRepo,bookingOpenRepo,trainArrivalDateService,
-                seatService,mapper);
+                                                            bookingRepo,bookingOpenRepo,trainArrivalDateService,
+                                                            bookingValidator,seatService,mapper);
 
 
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("HH:mm", Locale.ENGLISH);
@@ -146,35 +151,19 @@ class BookingServiceTest {
         when(trainService.getTrainByNo(1)).thenReturn(Optional.empty());
 
         //then
-        assertThrows(InvalidBookingException.class,()-> bookingServiceUnderTest.bookTicket(bookingRequest));
+        assertThrows(InvalidBookingAttemptException.class,()-> bookingServiceUnderTest.bookTicket(bookingRequest));
 
     }
 
     @Test
-    void testInvalidBookingExceptionCausedByIncorrectTrainNo() throws InvalidBookingException, TimeTableNotFoundException, BookingNotOpenException {
-
-
-        //given
-
-        Route route = new Route();
-        route.setRouteID(1);
-        route.setStations(List.of("stn1","stn2","stn3","stn4","stn5"));
-
-        Train train = new Train();
-        train.setRouteId(1);
-
+    void testInvalidBookingAttemptCausedByIncorrectTrainNo() throws InvalidBookingException, TimeTableNotFoundException, BookingNotOpenException {
 
         //when
-        when(trainService.getTrainByNo(1)).thenReturn(Optional.of(train));
+        when(trainService.getTrainByNo(1)).thenReturn(Optional.empty());
 
-        when(routeService.getRouteById(1)).thenReturn(Optional.of(route));
-
-        when(routeService.checkIfRouteContains(bookingRequest.getFrom(),
-                bookingRequest.getTo(),route)).thenReturn(false);
 
         //then
-        assertThrows(InvalidBookingException.class,()-> bookingServiceUnderTest.bookTicket(bookingRequest));
-
+        assertThrows(InvalidBookingAttemptException.class,()-> bookingServiceUnderTest.bookTicket(bookingRequest));
 
     }
 
@@ -185,6 +174,7 @@ class BookingServiceTest {
         //when
         when(trainService.getTrainByNo(1)).thenReturn(Optional.of(train));
 
+        when(trainArrivalDateService.getArrivalDate(1,"stn6",LocalDate.now())).thenReturn(Utils.toLocalDate(bookingRequest.getDoj()));
         when(routeService.getRouteById(1)).thenReturn(Optional.of(route));
 
         when(routeService.checkIfRouteContains(bookingRequest.getFrom(),
@@ -225,12 +215,12 @@ class BookingServiceTest {
                 .thenReturn(LocalDate.now());
 
         //then
-        assertThrows(InvalidBookingException.class,()->bookingServiceUnderTest.bookTicket(bookingRequest));
+        assertThrows(InvalidBookingAttemptException.class,()->bookingServiceUnderTest.bookTicket(bookingRequest));
 
     }
 
     @Test
-    void testBookingConfirmed() throws TimeTableNotFoundException, InvalidBookingException, BookingNotOpenException,TatkalNotOpenException {
+    void testBookingConfirmed() throws TimeTableNotFoundException, InvalidBookingException, TatkalNotOpenException, InvalidBookingAttemptException {
 
         //given
 
@@ -298,7 +288,7 @@ class BookingServiceTest {
     }
 
     @Test
-    void testTatkalBooking() throws TimeTableNotFoundException, InvalidBookingException, BookingNotOpenException,TatkalNotOpenException {
+    void testTatkalBooking() throws TimeTableNotFoundException, InvalidBookingException, TatkalNotOpenException, InvalidBookingAttemptException {
 
         //given
 
@@ -381,7 +371,7 @@ class BookingServiceTest {
     }
 
     @Test
-    void testBookingWaiting() throws InvalidBookingException, TimeTableNotFoundException, BookingNotOpenException,TatkalNotOpenException {
+    void testBookingWaiting() throws InvalidBookingException, TimeTableNotFoundException, TatkalNotOpenException, InvalidBookingAttemptException {
 
         //given
 

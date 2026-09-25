@@ -87,7 +87,7 @@ public class BookingServiceImpl implements BookingService {
         this.pnrs = Collections.synchronizedList(new ArrayList<>());
     }
 
-    public BookingResponse bookTicket(BookingRequest request) throws InvalidBookingException, BookingNotOpenException, TimeTableNotFoundException, TatkalNotOpenException {
+    public BookingResponse bookTicket(BookingRequest request) throws InvalidBookingAttemptException, TatkalNotOpenException, InvalidBookingException {
 
         BookingResponse response = null;
 
