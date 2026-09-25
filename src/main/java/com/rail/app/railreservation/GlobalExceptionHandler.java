@@ -2,6 +2,8 @@ package com.rail.app.railreservation;
 
 import com.rail.app.railreservation.booking.exception.BookingCannotOpenException;
 import com.rail.app.railreservation.booking.exception.BookingNotOpenException;
+import com.rail.app.railreservation.booking.exception.TatkalNotOpenException;
+import com.rail.app.railreservation.enquiry.exception.*;
 import com.rail.app.railreservation.booking.exception.InvalidBookingAttemptException;
 import com.rail.app.railreservation.enquiry.exception.InvalidSeatEnquiryException;
 import com.rail.app.railreservation.enquiry.exception.PnrNoIncorrectException;

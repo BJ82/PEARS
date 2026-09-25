@@ -32,6 +32,7 @@ public class Booking {
     private String startFrom;
     private String endAt;
     private LocalDate dtOfJourny;
+    private String bookingType;
 
     @Enumerated(EnumType.STRING)
     private JourneyClass journeyClass;
@@ -47,8 +48,10 @@ public class Booking {
 
     public Booking(String name, int age, String sex, int trainNo,
                    LocalDate startDt, LocalDate endDt, String startFrom,
-                   String to, LocalDate dtOfJourny, JourneyClass journeyClass,
+                   String to, LocalDate dtOfJourny,String bookingType, JourneyClass journeyClass,
                    BookingStatus bookingStatus, Timestamp timestamp, int seatNo,Berth berth) {
+
+
 
         this.name = name;
         this.age = age;
@@ -59,6 +62,7 @@ public class Booking {
         this.startFrom = startFrom;
         this.endAt = to;
         this.dtOfJourny = dtOfJourny;
+        this.bookingType = bookingType;
         this.journeyClass = journeyClass;
         this.bookingStatus = bookingStatus;
         this.timestamp = timestamp;

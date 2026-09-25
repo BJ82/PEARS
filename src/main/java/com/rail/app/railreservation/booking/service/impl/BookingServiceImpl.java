@@ -6,6 +6,9 @@ import com.rail.app.railreservation.booking.entity.Booking;
 import com.rail.app.railreservation.booking.entity.BookingOpen;
 import com.rail.app.railreservation.booking.enums.BookingStatus;
 import com.rail.app.railreservation.booking.exception.BookingCannotOpenException;
+import com.rail.app.railreservation.booking.exception.BookingNotOpenException;
+import com.rail.app.railreservation.booking.exception.InvalidBookingException;
+import com.rail.app.railreservation.booking.exception.TatkalNotOpenException;
 import com.rail.app.railreservation.booking.exception.InvalidBookingAttemptException;
 import com.rail.app.railreservation.booking.repository.BookingOpenRepository;
 import com.rail.app.railreservation.booking.repository.BookingRepository;
@@ -23,11 +26,13 @@ import com.rail.app.railreservation.util.Utils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.modelmapper.ModelMapper;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.sql.Timestamp;
 import java.time.Instant;
 import java.time.LocalDate;
+import java.time.LocalTime;
 import java.util.*;
 
 @Service
@@ -56,6 +61,13 @@ public class BookingServiceImpl implements BookingService {
     private final SeatService seatService;
     private final ModelMapper mapper;
 
+    @Value("${tatkal.start.time}")
+    private String tatkalStartTime;
+
+    @Value("${tatkal.end.time}")
+    private String tatkalEndTime;
+
+
     public BookingServiceImpl(TrainService trainService,
                               RouteService routeService,
                               BookingRepository bookingRepo, BookingOpenRepository bookingOpenRepo,
@@ -75,16 +87,147 @@ public class BookingServiceImpl implements BookingService {
         this.pnrs = Collections.synchronizedList(new ArrayList<>());
     }
 
+    public BookingResponse bookTicket(BookingRequest request) throws InvalidBookingException, BookingNotOpenException, TimeTableNotFoundException, TatkalNotOpenException {
 
-    public BookingResponse book(BookingRequest request) throws InvalidBookingAttemptException {
+        BookingResponse response = null;
+
+        String bookingType = request.getBookingType();
+
+        response = switch (bookingType) {
+            case "general" -> book(request);
+            case "tatkal" -> bookTatkal(request);
+            case "ladies" -> bookLadies(request);
+            case "senior" -> bookSeniorCitizen(request);
+            case "child" -> bookChild(request);
+            default -> throw new InvalidBookingException("Booking Category Type Is Invalid");
+        };
+
+        return response;
+    }
+
+    private BookingResponse bookTatkal(BookingRequest request)
+            throws InvalidBookingException, TimeTableNotFoundException, BookingNotOpenException, TatkalNotOpenException {
+
+        BookingResponse response = null;
+
+        LocalDate doj = Utils.toLocalDate(request.getDoj());
+
+        if(isTatkalOpen(request.getTrainNo())){
+
+            response = book(request);
+        }
+        else{
+            throw new TatkalNotOpenException("Tatkal Booking Not Yet Started!");
+        }
+
+      return response;
+    }
+
+    public boolean isTatkalOpen(int trainNo){
+
+        boolean isTatkalOpen = false;
+
+        logger.info("TATKAL START TIME: {}",tatkalStartTime);
+        LocalTime tatkalStart = Utils.toLocalTime(tatkalStartTime);
+        logger.info("TATKAL END TIME: {}",tatkalEndTime);
+        LocalTime tatkalEnd  = Utils.toLocalTime(tatkalEndTime);
+
+        LocalDate trainOriginStartDt = getTrainOriginStartDate(trainNo);
+        LocalDate trainOriginStartDtMinusOneDay = trainOriginStartDt.minusDays(1);
+
+        LocalTime now = LocalTime.now();
+        if(LocalDate.now().equals(trainOriginStartDtMinusOneDay)){
+            if(now.equals(tatkalStart) || (now.isAfter(tatkalStart) && now.isBefore(tatkalEnd))){
+                isTatkalOpen = true;
+            }
+        }
+
+        return isTatkalOpen;
+    }
+
+    private LocalDate getTrainOriginStartDate(int trainNo){
+
+        LocalDate startDt = null;
+        for(BookingOpen bookingOpen:bookingOpenRepo.findByTrainNo(trainNo)){
+
+            if(LocalDate.now().isBefore(bookingOpen.getStartDt())){
+                startDt =  bookingOpen.getStartDt();
+                break;
+            }
+        }
+
+        return startDt;
+    }
+
+    private BookingResponse bookLadies(BookingRequest request)
+            throws InvalidBookingException, TimeTableNotFoundException, BookingNotOpenException{
+
+        for(Passenger p:request.getPassengers()){
+
+            if(!"F".equals(p.getSex()))
+                throw new InvalidBookingException("Only Female Passengers Allowed On Ladies Quota");
+        }
+
+        return book(request);
+    }
+
+    private BookingResponse bookSeniorCitizen(BookingRequest request)
+            throws InvalidBookingException, TimeTableNotFoundException, BookingNotOpenException{
+
+        for(Passenger p:request.getPassengers()){
+
+            if(p.getAge() < 60)
+                throw new InvalidBookingException("Age Should Be Greater Than 60 On Senior Citizen Quota");
+        }
+        return book(request);
+    }
+
+    private BookingResponse bookChild(BookingRequest request)
+            throws InvalidBookingException, TimeTableNotFoundException, BookingNotOpenException{
+
+        for(Passenger p:request.getPassengers()){
+
+            if(p.getAge() > 5)
+                throw new InvalidBookingException("Age Should Be Less Or Equal To 5 On Child Quota");
+        }
+
+        return book(request);
+    }
+
+    private BookingResponse book(BookingRequest request) throws InvalidBookingException, BookingNotOpenException, TimeTableNotFoundException {
 
         logger.info(INSIDE_BOOKING_SERVICE);
 
-        bookingValidator.validate(request);
+        //Check if Train No is Valid
+        Train trn = trainService.getTrainByNo(request.getTrainNo())
+                .orElseThrow(() -> new InvalidBookingException("Booking Not Allowed On Non Existent Train"));
+
+        //Check if Route is valid
+        isValidRoute(request.getFrom(), request.getTo(), trn)
+                .orElseThrow(() -> new InvalidBookingException("TrainNo:" + request.getTrainNo() + " Not Running " + "Between " +
+                        request.getFrom() + "And " + request.getTo()));
+        //Check If Booking Is Allowed
+        isBookingOpen(request).orElseThrow(()->new BookingNotOpenException("Booking Not Yet Open For TrainNo:"+request.getTrainNo()+" For Dates "+request.getStartDt()+" And "+request.getEndDt()
+                )
+        );
+
+        //Check if DOJ is Valid
+        String pssngrJournyStartStn = request.getFrom();
+
+        LocalDate trainStartDateFrmSource = Utils.toLocalDate(request.getStartDt());
+
+        LocalDate dateOfArrival =  trainArrivalDateService.getArrivalDate(request.getTrainNo(),
+                pssngrJournyStartStn,trainStartDateFrmSource);
+
+        LocalDate dateOfJourney = Utils.toLocalDate(request.getDoj());
+
+        if(!dateOfArrival.equals(dateOfJourney))
+            throw new InvalidBookingException("Invalid Booking Because ",
+                    new TrainNotFoundException("No Train Found For Date Of Journey: "+dateOfJourney.toString()));
+
 
         logger.info("Processing Ticket Booking For TrainNo:{}, StartDate:{}, EndDate:{}",
-                     request.getTrainNo(),request.getStartDt(),request.getEndDt());
-
+                request.getTrainNo(),request.getStartDt(),request.getEndDt());
 
         seatNumbers.clear();
         seatNumbers.addAll(seatService.getAvailableSeatNumbers(request));
@@ -93,38 +236,39 @@ public class BookingServiceImpl implements BookingService {
 
         int seatCount = seatService.getCountOfConfirmedSeats(request);
         int seatNumber = 0;
-        BookingStatus bookingStatus = BookingStatus.CONFIRMED;
-
         int lastSeatNumber = 0;
         int i = 0;
-        Berth berth = Berth.UNASSIGNED;
+
+        Berth berth;
+        List<Berth> berths = new ArrayList<>();
+        BookingStatus bookingStatus;
+
         for (Passenger psngr : request.getPassengers()) {
 
+            berth = Berth.UNASSIGNED;
+            seatNumber = 0;
+            bookingStatus = BookingStatus.WAITING;
 
             if(i < seatNumbers.size()){
 
                 seatNumber = new ArrayList<>(seatNumbers).get(i);
                 lastSeatNumber = seatNumber;
                 bookingStatus = BookingStatus.CONFIRMED;
-                berth = getBerth(request.getTrainNo(),seatNumber,request.getJourneyClass());
+                berths.add(getBerth(request.getTrainNo(),seatNumber,request.getJourneyClass()));
+                berth = berths.get(i);
                 seatCount++;
             }
-            else {
 
-                seatNumber = 0;
-                bookingStatus = BookingStatus.WAITING;
-            }
 
             Booking bkng =  bookingRepo.save(new Booking(psngr.getName(), psngr.getAge(), psngr.getSex(),
-                    request.getTrainNo(), Utils.toLocalDate(request.getStartDt()),
-                    Utils.toLocalDate(request.getEndDt()),
-                    request.getFrom(),request.getTo(), Utils.toLocalDate(request.getDoj()),
-                    request.getJourneyClass(), bookingStatus, Timestamp.from(Instant.now()),
-                    seatNumber,berth));
+                                                        request.getTrainNo(), Utils.toLocalDate(request.getStartDt()),
+                                                        Utils.toLocalDate(request.getEndDt()),
+                                                        request.getFrom(),request.getTo(), Utils.toLocalDate(request.getDoj()),
+                                                        request.getBookingType(),request.getJourneyClass(), bookingStatus, Timestamp.from(Instant.now()),
+                                                        seatNumber,berth));
 
-            int pnrNo = bkng.getPnr();
 
-            pnrs.add(i,pnrNo);
+            pnrs.add(i,bkng.getPnr());
 
 
             i++;
@@ -140,40 +284,58 @@ public class BookingServiceImpl implements BookingService {
 
         seatService.trackCountOfSeats(request,seatCount);
 
+        logger.info("Completed Ticket Booking For TrainNo:{}, StartDate:{}, EndDate:{}",
+                request.getTrainNo(),request.getStartDt(),request.getEndDt());
+
+        return getBookingResponse(request,seatNumbers,pnrs,berths);
+
+    }
+
+    private BookingResponse getBookingResponse(BookingRequest request,Set<Integer> seatNumbers,List<Integer> pnrs,List<Berth> berths){
+
         BookingResponse bookingResponse = mapper.map(request, BookingResponse.class);
+
+        List<BookedPassenger> bookedPassengers = toBookedPassenger(request.getPassengers(),seatNumbers,pnrs,berths);
+
+        bookingResponse.getPassengerList().addAll(bookedPassengers);
         bookingResponse.setBookingDateTime(Timestamp.from(Instant.now()));
 
+        return bookingResponse;
+    }
+
+    private List<BookedPassenger> toBookedPassenger(List<Passenger> passengers,Set<Integer> seatNumbers,List<Integer> pnrs,List<Berth> berths){
+
+        int seatNumber = 0;
+        BookingStatus bookingStatus;
+
+        List<BookedPassenger> bookedPassengers = new ArrayList<>();
+
+        Berth berth;
         BookedPassenger bookedPassenger;
+        int noOfPsngr = passengers.size();
 
-        int noOfPsngr = request.getPassengers().size();
+        for(int j=0;j<noOfPsngr;j++) {
 
-        for(int j=0;j<noOfPsngr;j++){
+            seatNumber = 0;
+            berth = Berth.UNASSIGNED;
+            bookingStatus = BookingStatus.WAITING;
 
-            bookedPassenger = mapper.map(request.getPassengers().get(j),BookedPassenger.class);
-
-            if(j < seatNumbers.size()){
+            if (j < seatNumbers.size()) {
 
                 seatNumber = new ArrayList<>(seatNumbers).get(j);
                 bookingStatus = BookingStatus.CONFIRMED;
-            }
-            else {
-
-                seatNumber = 0;
-                bookingStatus = BookingStatus.WAITING;
+                berth = berths.get(j);
             }
 
+            bookedPassenger = mapper.map(passengers.get(j), BookedPassenger.class);
             bookedPassenger.setPnr(pnrs.get(j));
             bookedPassenger.setSeatNo(seatNumber);
             bookedPassenger.setStatus(bookingStatus);
             bookedPassenger.setBerth(berth);
-            bookingResponse.getPassengerList().add(bookedPassenger);
 
         }
 
-        logger.info("Completed Ticket Booking For TrainNo:{}, StartDate:{}, EndDate:{}",
-                             request.getTrainNo(),request.getStartDt(),request.getEndDt());
-        return bookingResponse;
-
+        return bookedPassengers;
     }
 
     private Berth getBerth(int trainNo,int seatNo,JourneyClass journeyClass) {

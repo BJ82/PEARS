@@ -4,6 +4,9 @@ import com.rail.app.railreservation.booking.dto.*;
 import com.rail.app.railreservation.booking.entity.Booking;
 import com.rail.app.railreservation.booking.entity.BookingOpen;
 import com.rail.app.railreservation.booking.exception.BookingCannotOpenException;
+import com.rail.app.railreservation.booking.exception.BookingNotOpenException;
+import com.rail.app.railreservation.booking.exception.InvalidBookingException;
+import com.rail.app.railreservation.booking.exception.TatkalNotOpenException;
 import com.rail.app.railreservation.booking.exception.InvalidBookingAttemptException;
 import com.rail.app.railreservation.enquiry.exception.PnrNoIncorrectException;
 import com.rail.app.railreservation.trainmanagement.enums.JourneyClass;
@@ -14,8 +17,8 @@ import java.util.Optional;
 
 public interface BookingService {
 
-    public BookingResponse book(BookingRequest request)
-            throws InvalidBookingAttemptException;
+    public BookingResponse bookTicket(BookingRequest request)
+            throws InvalidBookingException, BookingNotOpenException, TimeTableNotFoundException, TatkalNotOpenException;
 
     public String cancelBooking(int pnrNo) throws PnrNoIncorrectException;
 
@@ -25,6 +28,8 @@ public interface BookingService {
     public BookingOpenInfo getBookingOpenInfo(int trainNo);
 
     public Optional<Boolean> isBookingOpen(BookingRequest request);
+
+    public boolean isTatkalOpen(int trainNo);
 
     public List<BookingOpen> getBookingOpenInfoByTrainNo(int trainNo);
 

@@ -2,6 +2,9 @@ package com.rail.app.railreservation.booking.controller;
 
 import com.rail.app.railreservation.booking.dto.*;
 import com.rail.app.railreservation.booking.exception.BookingCannotOpenException;
+import com.rail.app.railreservation.booking.exception.BookingNotOpenException;
+import com.rail.app.railreservation.booking.exception.InvalidBookingException;
+import com.rail.app.railreservation.booking.exception.TatkalNotOpenException;
 import com.rail.app.railreservation.booking.exception.InvalidBookingAttemptException;
 import com.rail.app.railreservation.booking.service.BookingService;
 import com.rail.app.railreservation.booking.validator.ValidationSequence;
@@ -41,7 +44,7 @@ public class BookingController {
         logger.info(INSIDE_BOOKING_CONTROLLER);
         logger.info("Processing Request For Ticket Booking");
 
-        BookingResponse bookingResponse= bookingService.book(bookingRequest);
+        BookingResponse bookingResponse= bookingService.bookTicket(bookingRequest);
 
         URI location = ServletUriComponentsBuilder.fromCurrentRequestUri()
                 .path("/{id}")

@@ -78,7 +78,7 @@ class BookingControllerTest {
         String doj = startDate.plusDays(1).format(pattern);
 
         bookingRequest = new BookingRequest(trainNo,"TRAIN1",startDate.format(pattern),
-                endDate.format(pattern),from,to, JourneyClass.AC1,doj,passengers);
+                endDate.format(pattern),from,to, JourneyClass.AC1,"general",doj,passengers);
 
     }
 
@@ -107,7 +107,7 @@ class BookingControllerTest {
 
         }
 
-        when(bookingService.book(bookingRequest)).thenReturn(bookingResponse);
+        when(bookingService.bookTicket(bookingRequest)).thenReturn(bookingResponse);
 
         mockMvc.perform(post("/api/v1/booking")
                         .header(HttpHeaders.AUTHORIZATION,"Bearer "+jwt)
