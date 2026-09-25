@@ -2,7 +2,11 @@ package com.rail.app.railreservation;
 
 import com.rail.app.railreservation.booking.exception.BookingCannotOpenException;
 import com.rail.app.railreservation.booking.exception.BookingNotOpenException;
-import com.rail.app.railreservation.enquiry.exception.*;
+import com.rail.app.railreservation.booking.exception.InvalidBookingAttemptException;
+import com.rail.app.railreservation.enquiry.exception.InvalidSeatEnquiryException;
+import com.rail.app.railreservation.enquiry.exception.PnrNoIncorrectException;
+import com.rail.app.railreservation.enquiry.exception.RouteNotFoundException;
+import com.rail.app.railreservation.enquiry.exception.TrainNotFoundException;
 import com.rail.app.railreservation.signup.exception.UserPresentException;
 import com.rail.app.railreservation.trainmanagement.exception.DuplicateTrainException;
 import com.rail.app.railreservation.trainmanagement.exception.TimeTableAddFailException;
@@ -16,8 +20,12 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
+
+import java.util.HashMap;
+import java.util.Map;
 
 @ControllerAdvice
 public class GlobalExceptionHandler {
@@ -147,4 +155,39 @@ public class GlobalExceptionHandler {
 
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(expiredJwtEx.getMessage());
     }
+
+    @ExceptionHandler(InvalidBookingAttemptException.class)
+    public ResponseEntity<String> invlidBkngAttmptHandler(InvalidBookingAttemptException invldBkngAttmptEx){
+
+        StringBuilder errorMsg = new StringBuilder(invldBkngAttmptEx.getMessage());
+
+        Throwable cause = invldBkngAttmptEx.getCause();
+
+        while(cause != null){
+
+            errorMsg.append(cause.getMessage());
+
+            cause = cause.getCause();
+
+        }
+
+        logger.error(errorMsg.toString());
+
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorMsg.toString());
+    }
+
+    @ExceptionHandler(MethodArgumentNotValidException.class)
+    public ResponseEntity<Map<String, String>>  methodArgInvalidHandler(MethodArgumentNotValidException methodArgInvalidEx){
+
+        logger.error(methodArgInvalidEx.getMessage());
+
+        Map<String, String> errors = new HashMap<>();
+
+        methodArgInvalidEx.getBindingResult().getFieldErrors().forEach(error ->
+                errors.put(error.getField(), error.getDefaultMessage())
+        );
+
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errors);
+    }
+
 }

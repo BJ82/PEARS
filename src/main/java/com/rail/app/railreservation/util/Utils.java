@@ -31,4 +31,9 @@ public class Utils {
 
         return asOptional;
     }
+
+    public static boolean isNull(Object obj){
+
+        return obj != null;
+    }
 }
