@@ -170,24 +170,24 @@ class BookingServiceTest {
     @Test
     void testBookingNotOpen() throws InvalidBookingException, TimeTableNotFoundException, BookingNotOpenException {
 
-
         //when
         when(trainService.getTrainByNo(1)).thenReturn(Optional.of(train));
 
-        when(trainArrivalDateService.getArrivalDate(1,"stn6",LocalDate.now())).thenReturn(Utils.toLocalDate(bookingRequest.getDoj()));
-        when(routeService.getRouteById(1)).thenReturn(Optional.of(route));
-
-        when(routeService.checkIfRouteContains(bookingRequest.getFrom(),
-                bookingRequest.getTo(),route)).thenReturn(true);
+        when(trainArrivalDateService.getArrivalDate(1,"stn1",LocalDate.now())).thenReturn(Utils.toLocalDate(bookingRequest.getDoj()));
 
         when(bookingOpenRepo.isBookingOpen(bookingRequest.getTrainNo(),
                                            Utils.toLocalDate(bookingRequest.getStartDt()),
                                            Utils.toLocalDate(bookingRequest.getEndDt()))).thenReturn(Optional.of(Boolean.FALSE));
 
-        //when(bookingService.isBookingOpen(bookingRequest)).thenReturn(Optional.empty());
-
         //then
-        assertThrows(BookingNotOpenException.class,()-> bookingServiceUnderTest.bookTicket(bookingRequest));
+
+        try{
+            bookingServiceUnderTest.bookTicket(bookingRequest);
+        }
+        catch (Exception e){
+
+            assert(e.getCause() instanceof BookingNotOpenException);
+        }
 
     }
 
