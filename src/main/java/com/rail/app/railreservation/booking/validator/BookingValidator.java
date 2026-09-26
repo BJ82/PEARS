@@ -146,7 +146,25 @@ public class BookingValidator {
 
     private boolean isValidBookingType(BookingRequest request){
 
-        return true;
+        boolean isValid = true;
+        String bookingType = request.getBookingType();
+
+          switch (bookingType) {
+              case "general":
+                  break;
+              case "tatkal":
+                  break;
+              case "ladies":
+                  break;
+              case "senior":
+                  break;
+              case "child":
+                  break;
+              default:
+                  isValid = false;
+        };
+
+        return isValid;
     }
 
 }
